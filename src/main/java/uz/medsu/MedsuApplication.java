@@ -9,12 +9,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-//@SpringBootApplication
+@SpringBootApplication
 public class MedsuApplication {
 
     public static void main(String[] args) {
-        System.out.println(Timestamp.valueOf(LocalDateTime.of(LocalDate.parse("2023-11-14", DateTimeFormatter.ofPattern("yyyy-MM-dd")), LocalTime.of(0,0))));
-//        SpringApplication.run(MedsuApplication.class, args);
+        SpringApplication.run(MedsuApplication.class, args);
     }
 
 }

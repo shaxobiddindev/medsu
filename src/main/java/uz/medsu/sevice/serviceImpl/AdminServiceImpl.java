@@ -123,8 +123,8 @@ public class AdminServiceImpl implements AdminService {
         try {
             if (!time.split(":")[1].equals("00"))throw new RuntimeException(I18nUtil.getMessage("timeFormatError"));
             int start = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            int breakHour = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            int end = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            int breakHour = LocalTime.parse(breakTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            int end = LocalTime.parse(endTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
             int inputTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm")).getHour();
             return (start <= inputTime && end > inputTime && breakHour != inputTime) ? Optional.of(time) : Optional.empty();
         } catch (Exception e) {
