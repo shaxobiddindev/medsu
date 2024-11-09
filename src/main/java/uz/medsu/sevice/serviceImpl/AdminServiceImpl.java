@@ -1,11 +1,10 @@
 package uz.medsu.sevice.serviceImpl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.*;
-import uz.medsu.enums.Days;
 import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
 import uz.medsu.payload.ReturnUserDTO;
@@ -16,10 +15,15 @@ import uz.medsu.sevice.AdminService;
 import uz.medsu.utils.I18nUtil;
 import uz.medsu.utils.ResponseMessage;
 
+import java.sql.Timestamp;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +31,13 @@ public class AdminServiceImpl implements AdminService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
-    private final DaysRepository daysRepository;
     private final SpecialityRepository specialityRepository;
+    @Value("${my_var.start-time}")
+    private String startTime;
+    @Value("${my_var.break-time}")
+    private String breakTime;
+    @Value("${my_var.end-time}")
+    private String endTime;
 
     @Override
     public ResponseMessage roles() {
@@ -38,16 +47,16 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseMessage setDoctor(SetDoctorDTO doctorDTO) {
         User user = userRepository.findById(doctorDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
-        if (checkAuthorityId(doctorDTO.authoritiesId())) throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
+        if (checkAuthorityId(doctorDTO.authoritiesId()))
+            throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
 
         user.getRole().setName(Roles.DOCTOR);
         user.setProfession(Roles.DOCTOR);
-        Speciality speciality = Speciality.builder()
+        Doctor speciality = Doctor.builder()
                 .about(doctorDTO.about())
-                .workTimes(formatTimes(doctorDTO.startWorkTime(), doctorDTO.breakTime(), doctorDTO.endWorkTime()))
-                .workDays(formatDays(doctorDTO.startWorkDate(), doctorDTO.endWorkDate()))
                 .doctorSpecialty(DoctorSpeciality.valueOf(doctorDTO.doctorSpeciality().toUpperCase()))
-                .userId(user.getId())
+                .user(user)
+                .appointmentPrice(doctorDTO.appointmentPrice())
                 .build();
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId())).toList());
         specialityRepository.save(speciality);
@@ -100,59 +109,26 @@ public class AdminServiceImpl implements AdminService {
         return false;
     }
 
-    private List<Day> formatDays(String start, String end) {
-        Day startDay;
-        Day endDay;
-        try{
-            startDay = daysRepository.findByDay(Days.valueOf(start.toUpperCase())).orElseThrow(RuntimeException::new);
-            endDay = daysRepository.findByDay(Days.valueOf(end.toUpperCase())).orElseThrow(RuntimeException::new);
-        }
-        catch (Exception e){
-            throw new RuntimeException(I18nUtil.getMessage("weekdaysError"));
-        }
-        List<Day> all = daysRepository.findAll();
-        List<Day> days = new ArrayList<>();
 
-        if (startDay.getId() > endDay.getId()) {
-            for (long i = startDay.getId(); i <= 7; i++) {
-                days.add(all.get((int) (i-1)));
-            }
-            for (long i = 1; i <= endDay.getId(); i++) {
-                days.add(all.get((int) (i-1)));
-            }
-        }else {
-            for (long i = startDay.getId(); i <= endDay.getId(); i++) {
-                days.add(all.get((int) (i-1)));
-            }
+    private Optional<Timestamp> checkDate(String date) {
+        try {
+            LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            return !DayOfWeek.SUNDAY.equals(localDate.getDayOfWeek()) ? Optional.of(Timestamp.valueOf(LocalDateTime.of(localDate, LocalTime.of(0,0)))) : Optional.empty();
+        } catch (Exception e) {
+            throw new RuntimeException(I18nUtil.getMessage("dateFormatError"));
         }
-
-        return days;
     }
 
-    private List<Time> formatTimes(String start, String breakTime, String end ) {
-        List<Time> workTimes = new ArrayList<>();
-
+    private Optional<String> formatTimes(String time) {
         try {
-            int first = Integer.parseInt(start.split(":")[0]);
-            int br = Integer.parseInt(breakTime.split(":")[0]);
-            int last = Integer.parseInt(end.split(":")[0]);
-            LocalTime breakLocal = formatTime(breakTime);
-            for (int i = first; i < last; i++) {
-                if (i == br)continue;
-                Time time = new Time();
-                LocalTime startTime = formatTime(i+":00");
-                time.setTime(startTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-                workTimes.add(time);
-            }
-
-        }catch (Exception e){
+            if (!time.split(":")[1].equals("00"))throw new RuntimeException(I18nUtil.getMessage("timeFormatError"));
+            int start = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            int breakHour = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            int end = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            int inputTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm")).getHour();
+            return (start <= inputTime && end > inputTime && breakHour != inputTime) ? Optional.of(time) : Optional.empty();
+        } catch (Exception e) {
             throw new RuntimeException(I18nUtil.getMessage("timeFormatError"));
         }
-
-        return workTimes;
-    }
-
-    private LocalTime formatTime(String time) {
-        return LocalTime.parse(time);
     }
 }

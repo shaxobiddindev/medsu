@@ -5,25 +5,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uz.medsu.enums.DoctorSpeciality;
 
 import java.util.List;
 
+
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class Speciality {
+public class Basket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String about;
-    private Long userId;
-    @Enumerated(EnumType.STRING)
-    private DoctorSpeciality doctorSpecialty;
+    @ManyToOne
+    private User user;
     @ManyToMany
-    private List<Day> workDays;
-    @ManyToMany
-    private List<Time> workTimes;
+    private List<Drug> drugs;
+    @ManyToOne
+    private Invoice invoice;
 }

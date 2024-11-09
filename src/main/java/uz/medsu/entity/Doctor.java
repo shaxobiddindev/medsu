@@ -5,20 +5,21 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
+import uz.medsu.enums.DoctorSpeciality;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Rating {
+public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Double rating;
-    private Long doctorId;
-    @Column(unique = true)
-    private Long appointmentId;
-    private Long userId;
+    private String about;
+    @ManyToOne
+    private User user;
+    @Enumerated(EnumType.STRING)
+    private DoctorSpeciality doctorSpecialty;
+    private Double appointmentPrice;
 }
