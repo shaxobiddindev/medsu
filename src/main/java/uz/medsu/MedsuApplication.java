@@ -11,9 +11,7 @@ import java.time.format.DateTimeFormatter;
 
 @SpringBootApplication
 public class MedsuApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(MedsuApplication.class, args);
     }
-
 }
