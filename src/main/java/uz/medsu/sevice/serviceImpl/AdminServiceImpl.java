@@ -49,6 +49,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseMessage setDoctor(SetDoctorDTO doctorDTO) {
         User user = userRepository.findById(doctorDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        if(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired() && !user.getRole().getName().equals(Roles.USER)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if (checkAuthorityId(doctorDTO.authoritiesId()))
             throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
 
