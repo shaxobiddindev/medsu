@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.*;
+import uz.medsu.enums.Authorities;
 import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
 import uz.medsu.payload.ReturnUserDTO;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +60,7 @@ public class AdminServiceImpl implements AdminService {
                 .user(user)
                 .appointmentPrice(doctorDTO.appointmentPrice())
                 .build();
-        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId())).toList());
+        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         specialityRepository.save(speciality);
         userRepository.save(user);
         return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole())).build();
