@@ -69,6 +69,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ResponseMessage setRole(UserRoleEditDTO roleEditDTO) {
+        User user = userRepository.findById(roleEditDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        if(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired()) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
+        if (checkAuthorityId(roleEditDTO.authorityIds()))
+            throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
+
+        user.getRole().setName(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
+        user.setProfession(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
+        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
+        userRepository.save(user);
         return null;
     }
 

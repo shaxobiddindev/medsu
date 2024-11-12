@@ -2,22 +2,43 @@ package uz.medsu.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import uz.medsu.entity.Chat;
+import uz.medsu.payload.ChatDTO;
 import uz.medsu.repository.ChatRepository;
+import uz.medsu.repository.UserRepository;
+import uz.medsu.sevice.ChatService;
 import uz.medsu.utils.ResponseMessage;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/chat")
 public class ChatController {
-    private final ChatRepository chatRepository;
+
+    private final ChatService chatService;
 
     @GetMapping
-    public ResponseEntity<ResponseMessage> getChats(@RequestParam Long id) {
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ResponseMessage> getChats() {
+        return ResponseEntity.ok(chatService.getChat());
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseMessage> addChat(@RequestBody ChatDTO chat) {
+        return ResponseEntity.ok(chatService.addChat(chat));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseMessage> updateChat(@RequestBody String chatTitle, @PathVariable Long id) {
+        return ResponseEntity.ok(chatService.updateChat(chatTitle, id));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseMessage> getChat(@PathVariable Long id) {
+        return ResponseEntity.ok(chatService.getChatById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseMessage> deleteChat(@PathVariable Long id) {
+        return ResponseEntity.ok(chatService.deleteChat(id));
     }
 }

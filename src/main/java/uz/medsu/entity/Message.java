@@ -23,6 +23,8 @@ public class Message {
     private String message;
     @ManyToOne
     private User sender;
+    @ManyToOne
+    private Chat chat;
     @CreationTimestamp
     private Timestamp sendTime;
     private Long replyId;
