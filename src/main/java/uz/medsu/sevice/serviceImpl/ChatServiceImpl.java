@@ -37,7 +37,6 @@ public class ChatServiceImpl implements ChatService {
                     List<ResponseMessageDTO> messages = messageRepository.findAllByChatAndIsActive(temp, true).stream().map(message -> {
                         return new ResponseMessageDTO(
                                 message.getMessage(),
-                                message.getType().toString(),
                                 message.getReplyId(),
                                 message.getIsRead(),
                                 message.getSender().getId(),
@@ -122,9 +121,10 @@ public class ChatServiceImpl implements ChatService {
                 found.getChatType().toString(),
                 found.getUsers().stream().map(User::getId).toList(),
                 messageRepository.findAllByChatAndIsActive(found, true).stream().map(message -> {
+                    message.setIsRead(true);
+                    messageRepository.save(message);
                     return new ResponseMessageDTO(
                             message.getMessage(),
-                            message.getType().toString(),
                             message.getReplyId(),
                             message.getIsRead(),
                             message.getSender().getId(),
@@ -134,6 +134,4 @@ public class ChatServiceImpl implements ChatService {
                 );
         return new ResponseMessage(true, null, responseChatDTO);
     }
-
-
 }
