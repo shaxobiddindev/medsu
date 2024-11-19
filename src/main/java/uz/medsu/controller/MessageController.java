@@ -2,7 +2,10 @@ package uz.medsu.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import uz.medsu.entity.Message;
 import uz.medsu.payload.EditMessageDTO;
 import uz.medsu.payload.MessageDTO;
 import uz.medsu.sevice.MessageService;
@@ -19,9 +22,9 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getMessage(id));
     }
 
-    @PostMapping
-    public ResponseEntity<ResponseMessage> sendMessage(@RequestBody MessageDTO messageDTO) {
-        return ResponseEntity.ok(messageService.sendMessage(messageDTO));
+    @MessageMapping("/send")
+    public Message sendMessage(@RequestBody MessageDTO messageDTO) {
+        return messageService.sendMessage(messageDTO);
     }
 
     @PutMapping

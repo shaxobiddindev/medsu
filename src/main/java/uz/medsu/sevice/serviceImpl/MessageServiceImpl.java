@@ -20,7 +20,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ChatRepository chatRepository;
     @Override
-    public ResponseMessage sendMessage(MessageDTO messageDTO) {
+    public Message sendMessage(MessageDTO messageDTO) {
         if (messageDTO.message().isBlank()) throw new RuntimeException("messageNotEmpty");
         Chat chat = chatRepository.findByIdAndIsActive(messageDTO.chatId(), true).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("chatNotFound")));
         Message message = Message.builder()
@@ -32,7 +32,7 @@ public class MessageServiceImpl implements MessageService {
                 .message(messageDTO.message())
                 .build();
         messageRepository.save(message);
-        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("messageSendSuccess")).build();
+        return message;
     }
 
     @Override
