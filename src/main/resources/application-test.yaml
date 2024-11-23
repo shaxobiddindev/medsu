@@ -4,7 +4,7 @@ spring:
   application:
     name: medsu
   datasource:
-    url: jdbc:postgresql://dpg-cseecce8ii6s739257pg-a/post_db_zkm9
+    url: jdbc:postgresql://dpg-cseecce8ii6s739257pg-a.oregon-postgres.render.com/post_db_zkm9
     username: post_user
     password: fNJxJUGs4mbCl88SIQ5D1a7UFFy25het
     driver-class-name: org.postgresql.Driver
@@ -24,6 +24,6 @@ my_var:
   end-time: "17:00"
   admin-fee: 1
   taxes: 1
-#server:
-#  servlet:
-#    context-path: /api
+server:
+  servlet:
+    context-path: /api
