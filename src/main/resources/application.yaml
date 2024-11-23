@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: test
+    active: prod
 #spring:
 #  banner:
 #    location: banner.txt
