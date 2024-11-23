@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import uz.medsu.enums.AppointmentStatus;
 
 import java.sql.Timestamp;
 
@@ -24,6 +25,8 @@ public class Appointment {
     @ManyToOne
     private Doctor doctor;
     private Timestamp date;
+    @Enumerated(EnumType.STRING)
+    private AppointmentStatus status;
     private String time;
     @ManyToOne
     private Invoice invoice;

@@ -1,12 +1,11 @@
 package uz.medsu.sevice.serviceImpl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.Chat;
 import uz.medsu.entity.Message;
-import uz.medsu.payload.EditMessageDTO;
-import uz.medsu.payload.MessageDTO;
+import uz.medsu.payload.chats.EditMessageDTO;
+import uz.medsu.payload.chats.MessageDTO;
 import uz.medsu.repository.ChatRepository;
 import uz.medsu.repository.MessageRepository;
 import uz.medsu.sevice.MessageService;

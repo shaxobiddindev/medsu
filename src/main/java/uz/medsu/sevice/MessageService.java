@@ -1,8 +1,8 @@
 package uz.medsu.sevice;
 
 import uz.medsu.entity.Message;
-import uz.medsu.payload.EditMessageDTO;
-import uz.medsu.payload.MessageDTO;
+import uz.medsu.payload.chats.EditMessageDTO;
+import uz.medsu.payload.chats.MessageDTO;
 import uz.medsu.utils.ResponseMessage;
 
 public interface MessageService {

@@ -1,7 +1,6 @@
-package uz.medsu.payload;
+package uz.medsu.payload.users;
 
 import uz.medsu.entity.Role;
-import uz.medsu.enums.Gender;
 
 public record ReturnUserDTO(Long id, String fistName, String lastName, String email, Integer age, String gender, Role role) {
 }

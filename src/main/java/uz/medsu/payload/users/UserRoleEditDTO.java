@@ -1,4 +1,4 @@
-package uz.medsu.payload;
+package uz.medsu.payload.users;
 
 import java.util.List;
 

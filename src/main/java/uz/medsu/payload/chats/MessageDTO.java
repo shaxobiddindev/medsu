@@ -1,6 +1,4 @@
-package uz.medsu.payload;
-
-import java.time.LocalDateTime;
+package uz.medsu.payload.chats;
 
 public record MessageDTO (
         Long chatId,

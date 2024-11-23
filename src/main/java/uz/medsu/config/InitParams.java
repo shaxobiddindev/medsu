@@ -18,6 +18,7 @@ public class InitParams implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final CardRepository cardRepository;
     @Value("${spring.sql.init.mode}")
     String mode;
 
@@ -52,6 +53,15 @@ public class InitParams implements CommandLineRunner {
                     .age(20)
                     .build();
             userRepository.save(admin);
+
+            Card card = Card.builder()
+                    .user(admin)
+                    .expiryDate("11/30")
+                    .number("9860120105531434")
+                    .balance(500.0)
+                    .type("HUMO")
+                    .build();
+            cardRepository.save(card);
         }
     }
 }

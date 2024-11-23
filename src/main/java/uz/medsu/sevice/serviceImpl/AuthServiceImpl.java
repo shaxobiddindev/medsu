@@ -1,29 +1,23 @@
 package uz.medsu.sevice.serviceImpl;
 
 import lombok.RequiredArgsConstructor;
-import org.hibernate.mapping.List;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.medsu.config.JwtProvider;
-import uz.medsu.entity.Card;
 import uz.medsu.entity.Role;
 import uz.medsu.entity.User;
 import uz.medsu.enums.Authorities;
 import uz.medsu.enums.Gender;
 import uz.medsu.enums.Roles;
-import uz.medsu.payload.ReturnUserDTO;
-import uz.medsu.payload.SignInDTO;
-import uz.medsu.payload.UserDTO;
+import uz.medsu.payload.users.ReturnUserDTO;
+import uz.medsu.payload.users.SignInDTO;
+import uz.medsu.payload.users.UserDTO;
 import uz.medsu.repository.AuthorityRepository;
-import uz.medsu.repository.CardRepository;
 import uz.medsu.repository.RoleRepository;
 import uz.medsu.repository.UserRepository;
 import uz.medsu.sevice.AuthService;
 import uz.medsu.utils.I18nUtil;
 import uz.medsu.utils.ResponseMessage;
-
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtProvider.generateToken(user);
 
 //        byte[] encode = Base64.getEncoder().encode((user.getUsername() + ":" + user.getPassword()).getBytes());
-        return ResponseMessage.builder().data(token).build();
+        return ResponseMessage.builder().success(true).message("Login successfully!").data(token).build();
     }
 
     @Override
@@ -61,7 +55,10 @@ public class AuthServiceImpl implements AuthService {
                         .findAll()
                         .stream()
                         .filter(a -> a.getAuthorities().equals(Authorities.READ)
-                                || a.getAuthorities().equals(Authorities.POST))
+                                || a.getAuthorities().equals(Authorities.POST)
+                                || a.getAuthorities().equals(Authorities.EDIT)
+                                || a.getAuthorities().equals(Authorities.DELETE)
+                        )
                         .toList())
                 .build();
         roleRepository.save(role);
@@ -80,6 +77,6 @@ public class AuthServiceImpl implements AuthService {
                 .locale("en")
                 .build();
         userRepository.save(user);
-        return ResponseMessage.builder().data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole())).build();
+        return ResponseMessage.builder().success(true).message("Sign Up successfully!").data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole())).build();
     }
 }

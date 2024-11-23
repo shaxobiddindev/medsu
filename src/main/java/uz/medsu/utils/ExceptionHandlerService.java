@@ -9,6 +9,6 @@ public class ExceptionHandlerService {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handler(Exception e) {
         e.printStackTrace();
-        return ResponseEntity.status(400).body(e.getMessage());
+        return ResponseEntity.status(400).body(ResponseMessage.builder().success(false).message(e.getMessage()).build());
     }
 }

@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import uz.medsu.payload.ReturnUserDTO;
 import uz.medsu.payload.SetDoctorDTO;
-import uz.medsu.payload.UserRoleEditDTO;
+import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.sevice.AdminService;
 import uz.medsu.utils.ResponseMessage;
 

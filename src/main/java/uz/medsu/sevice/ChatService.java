@@ -1,7 +1,6 @@
 package uz.medsu.sevice;
 
-import uz.medsu.entity.Chat;
-import uz.medsu.payload.ChatDTO;
+import uz.medsu.payload.chats.ChatDTO;
 import uz.medsu.utils.ResponseMessage;
 
 public interface ChatService {

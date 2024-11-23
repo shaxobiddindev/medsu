@@ -1,4 +1,4 @@
-package uz.medsu.payload;
+package uz.medsu.payload.chats;
 
 import java.time.LocalDateTime;
 

@@ -1,9 +1,7 @@
 package uz.medsu.sevice;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import uz.medsu.payload.SignInDTO;
-import uz.medsu.payload.UserDTO;
+import uz.medsu.payload.users.SignInDTO;
+import uz.medsu.payload.users.UserDTO;
 import uz.medsu.utils.ResponseMessage;
 
 

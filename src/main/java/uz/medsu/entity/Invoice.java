@@ -29,6 +29,7 @@ public class Invoice {
     private User from; // Pul to'laydigan user!!!
     private Double price;
     private Double amount;
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
     @CreationTimestamp
     private Timestamp createdAt;

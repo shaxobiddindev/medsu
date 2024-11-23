@@ -22,4 +22,5 @@ public class Doctor {
     @Enumerated(EnumType.STRING)
     private DoctorSpeciality doctorSpecialty;
     private Double appointmentPrice;
+    private Double rating;
 }

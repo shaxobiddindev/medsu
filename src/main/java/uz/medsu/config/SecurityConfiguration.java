@@ -44,6 +44,10 @@ public class SecurityConfiguration {
                 .permitAll()
                 .requestMatchers("/admin/**")
                 .hasRole("ADMIN")
+                .requestMatchers("/user/**")
+                .hasRole("USER")
+                .requestMatchers("/doctor/**")
+                .hasRole("DOCTOR")
                 .anyRequest()
                 .authenticated();
         return http.build();

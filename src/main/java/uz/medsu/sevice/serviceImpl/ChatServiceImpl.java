@@ -5,10 +5,10 @@ import org.springframework.stereotype.Service;
 import uz.medsu.entity.Chat;
 import uz.medsu.entity.User;
 import uz.medsu.enums.ChatType;
-import uz.medsu.payload.ChatDTO;
-import uz.medsu.payload.ResponseChatDTO;
-import uz.medsu.payload.ResponseMessageDTO;
-import uz.medsu.payload.ResponseOneChatDTO;
+import uz.medsu.payload.chats.ChatDTO;
+import uz.medsu.payload.chats.ResponseChatDTO;
+import uz.medsu.payload.chats.ResponseMessageDTO;
+import uz.medsu.payload.chats.ResponseOneChatDTO;
 import uz.medsu.repository.ChatRepository;
 import uz.medsu.repository.MessageRepository;
 import uz.medsu.repository.UserRepository;
@@ -19,7 +19,6 @@ import uz.medsu.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor

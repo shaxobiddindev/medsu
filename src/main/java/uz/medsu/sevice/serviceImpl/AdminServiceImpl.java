@@ -8,9 +8,9 @@ import uz.medsu.entity.*;
 import uz.medsu.enums.Authorities;
 import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
-import uz.medsu.payload.ReturnUserDTO;
+import uz.medsu.payload.users.ReturnUserDTO;
 import uz.medsu.payload.SetDoctorDTO;
-import uz.medsu.payload.UserRoleEditDTO;
+import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.repository.*;
 import uz.medsu.sevice.AdminService;
 import uz.medsu.utils.I18nUtil;
@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +48,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseMessage setDoctor(SetDoctorDTO doctorDTO) {
         User user = userRepository.findById(doctorDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        if (user.getProfession().equals(Roles.ADMIN)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired() && !user.getRole().getName().equals(Roles.USER)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if (checkAuthorityId(doctorDTO.authoritiesId()))
             throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
@@ -60,6 +60,7 @@ public class AdminServiceImpl implements AdminService {
                 .doctorSpecialty(DoctorSpeciality.valueOf(doctorDTO.doctorSpeciality().toUpperCase()))
                 .user(user)
                 .appointmentPrice(doctorDTO.appointmentPrice())
+                .rating(0.0)
                 .build();
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         specialityRepository.save(speciality);
@@ -70,7 +71,8 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseMessage setRole(UserRoleEditDTO roleEditDTO) {
         User user = userRepository.findById(roleEditDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
-        if(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired()) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
+        if (user.getProfession().equals(Roles.ADMIN)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
+        if(!(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired())) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if (checkAuthorityId(roleEditDTO.authorityIds()))
             throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
 
@@ -78,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
         user.setProfession(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         userRepository.save(user);
-        return null;
+        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole())).build();
     }
 
     @Override

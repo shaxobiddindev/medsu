@@ -3,10 +3,7 @@ package uz.medsu.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uz.medsu.entity.Chat;
-import uz.medsu.payload.ChatDTO;
-import uz.medsu.repository.ChatRepository;
-import uz.medsu.repository.UserRepository;
+import uz.medsu.payload.chats.ChatDTO;
 import uz.medsu.sevice.ChatService;
 import uz.medsu.utils.ResponseMessage;
 

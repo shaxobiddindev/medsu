@@ -3,11 +3,10 @@ package uz.medsu.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import uz.medsu.entity.Message;
-import uz.medsu.payload.EditMessageDTO;
-import uz.medsu.payload.MessageDTO;
+import uz.medsu.payload.chats.EditMessageDTO;
+import uz.medsu.payload.chats.MessageDTO;
 import uz.medsu.sevice.MessageService;
 import uz.medsu.utils.ResponseMessage;
 

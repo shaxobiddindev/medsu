@@ -1,8 +1,7 @@
 package uz.medsu.sevice;
 
-import org.springframework.stereotype.Service;
 import uz.medsu.payload.SetDoctorDTO;
-import uz.medsu.payload.UserRoleEditDTO;
+import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.utils.ResponseMessage;
 
 
