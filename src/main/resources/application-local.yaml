@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: prod
-spring:
   banner:
     location: banner.txt
   application:
@@ -27,8 +24,6 @@ my_var:
   end-time: "17:00"
   admin-fee: 1
   taxes: 1
-#server:
-#  servlet:
-#    context-path: /api
-#server:
-#  port: 8081
+server:
+  servlet:
+    context-path: /api

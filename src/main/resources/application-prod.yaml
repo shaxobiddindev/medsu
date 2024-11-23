@@ -1,23 +1,20 @@
 spring:
-  profiles:
-    active: prod
-spring:
   banner:
     location: banner.txt
   application:
     name: medsu
   datasource:
-    url: jdbc:postgresql://localhost:5432/medsu
-    username: postgres
-    password: root123
-    driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://dpg-cseecce8ii6s739257pg-a/post_db_zkm9
+      username: post_user
+      password: fNJxJUGs4mbCl88SIQ5D1a7UFFy25het
+      driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
   sql:
     init:
-      mode: never
+      mode: always
 my_token:
   key: shaxobiddindevjknsjnvfwefbnwujnosdwssedfwef
   expire_time: 86400000
@@ -30,5 +27,3 @@ my_var:
 #server:
 #  servlet:
 #    context-path: /api
-#server:
-#  port: 8081
