@@ -15,7 +15,8 @@ public interface Util {
     String[] openUrl = {
             "/auth/**",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+//            "/image/**"
     };
 
     static User getCurrentUser() {

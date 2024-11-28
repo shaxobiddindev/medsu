@@ -1,4 +1,4 @@
-package uz.medsu.sevice.serviceImpl;
+package uz.medsu.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -13,4 +13,7 @@ public interface AdminService {
     ResponseMessage getAllUsers(Integer page, Integer size);
     ResponseMessage getAdmins(Integer page, Integer size);
     ResponseMessage getUsers(Integer page, Integer size);
+    ResponseMessage blockUser(Long id);
+    ResponseMessage unblockUser(Long id);
+    ResponseMessage enableUser(Long id);
 }

@@ -18,10 +18,7 @@ public class Basket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
+    @OneToOne
     private User user;
-    @ManyToMany
-    private List<Drug> drugs;
-    @ManyToOne
-    private Invoice invoice;
+    private Double totalPrice;
 }

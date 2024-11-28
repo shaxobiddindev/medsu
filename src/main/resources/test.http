@@ -1,0 +1,11 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+###
+
+POST http://localhost:8080/api/image/3/drug
+Content-Type: multipart/form-data
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzI4MjM2MzAsInN1YiI6ImFkbWluIiwiZXhwIjoxNzMyOTEwMDMwfQ.2IaLLXhe-xcMN-rjmYQ_jkdAJXzKDmoZITTXVzzm1NQ
+
+file=/home/shaxobiddin/Pictures/profile.jpg

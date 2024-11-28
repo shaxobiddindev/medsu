@@ -31,6 +31,8 @@ public class Invoice {
     private Double amount;
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
+    private String toCard;
+    private String fromCard;
     @CreationTimestamp
     private Timestamp createdAt;
     @UpdateTimestamp

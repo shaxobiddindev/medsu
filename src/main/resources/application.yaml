@@ -1,34 +1,3 @@
 spring:
   profiles:
-    active: prod
-#spring:
-#  banner:
-#    location: banner.txt
-#  application:
-#    name: medsu
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/medsu
-#    username: postgres
-#    password: root123
-#    driver-class-name: org.postgresql.Driver
-#  jpa:
-#    show-sql: true
-#    hibernate:
-#      ddl-auto: update
-#  sql:
-#    init:
-#      mode: never
-#my_token:
-#  key: shaxobiddindevjknsjnvfwefbnwujnosdwssedfwef
-#  expire_time: 86400000
-#my_var:
-#  start-time: "10:00"
-#  break-time: "12:00"
-#  end-time: "17:00"
-#  admin-fee: 1
-#  taxes: 1
-#server:
-#  servlet:
-#    context-path: /api
-#server:
-#  port: 8081
+    active: local

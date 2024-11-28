@@ -65,7 +65,7 @@ public class AdminServiceImpl implements AdminService {
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         specialityRepository.save(speciality);
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole())).build();
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked())).build();
     }
 
     @Override
@@ -80,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
         user.setProfession(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole())).build();
+        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked())).build();
     }
 
     @Override
@@ -108,10 +108,34 @@ public class AdminServiceImpl implements AdminService {
         return ResponseMessage.builder().success(true).data(usersReturn(users)).build();
     }
 
+    @Override
+    public ResponseMessage blockUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        user.setIsNonLocked(false);
+        userRepository.save(user);
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userBlocked")).build();
+    }
+
+    @Override
+    public ResponseMessage unblockUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        user.setIsNonLocked(true);
+        userRepository.save(user);
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("unblockUser")).build();
+    }
+
+    @Override
+    public ResponseMessage enableUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        user.setEnabled(true);
+        userRepository.save(user);
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("enableUser")).build();
+    }
+
     private List<ReturnUserDTO> usersReturn(List<User> users) {
         List<ReturnUserDTO> returnUsers = new ArrayList<>();
         for (User user : users) {
-            returnUsers.add(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole()));
+            returnUsers.add(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked()));
         }
         return returnUsers;
     }

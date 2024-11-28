@@ -4,9 +4,9 @@ spring:
   application:
     name: medsu
   datasource:
-    url: jdbc:postgresql://dpg-cseecce8ii6s739257pg-a.oregon-postgres.render.com/post_db_zkm9
-    username: post_user
-    password: fNJxJUGs4mbCl88SIQ5D1a7UFFy25het
+    url: jdbc:postgresql://dpg-ct463dl6l47c73f6srrg-a.oregon-postgres.render.com/medsu
+    username: shaxobiddin
+    password: 3AcRQTsj8vpoawu40kO38HeD8kVKK28m
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
@@ -16,14 +16,16 @@ spring:
     init:
       mode: never
 my_token:
-  key: shaxobiddindevjknsjnvfwefbnwujnosdwssedfwef
+  key: ShaxobiddinUralovJavaBackendDeveloper
+  expire_pass_time: 300000
   expire_time: 86400000
 my_var:
+  appliation_url: https://https://medsu-u6mi.onrender.com
   start-time: "10:00"
   break-time: "12:00"
   end-time: "17:00"
-  admin-fee: 1
-  taxes: 1
+imgur:
+  client-id: "8e9f7d403565d88"
 server:
   servlet:
     context-path: /api

@@ -35,19 +35,20 @@ public class SecurityConfiguration {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.disable());
-
         http
                 .userDetailsService(userDetailsService());
         http
                 .authorizeRequests()
                 .requestMatchers(Util.openUrl)
                 .permitAll()
-                .requestMatchers("/admin/**")
+                .requestMatchers(new String[]{"/admin/**", "/drug/**", "/user/**", "/doctor/**", "/article/**"})
                 .hasRole("ADMIN")
                 .requestMatchers("/user/**")
-                .hasRole("USER")
-                .requestMatchers("/doctor/**")
+                .hasAnyRole("USER", "ADMIN", "DOCTOR")
+                .requestMatchers(new String[]{"/doctor/**", "/article/**"})
                 .hasRole("DOCTOR")
+                .requestMatchers("/image/**")
+                .hasAnyRole("ADMIN", "USER", "DOCTOR")
                 .anyRequest()
                 .authenticated();
         return http.build();

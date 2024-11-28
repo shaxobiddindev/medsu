@@ -18,6 +18,11 @@ public class I18nServiceImpl implements I18nService {
 
 
     @Override
+    public String getMessage(String key, User user) {
+        return messageSource.getMessage(key, null, new Locale(user.getLocale()));
+    }
+
+    @Override
     public String getMessage(String key) {
         return messageSource.getMessage(key, null, new Locale(Util.getCurrentUser().getLocale()));
     }

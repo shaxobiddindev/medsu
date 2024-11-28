@@ -57,4 +57,19 @@ public class AdminController {
     public ResponseEntity<ResponseMessage> getDoctors(Integer page, Integer size) {
         return ResponseEntity.ok(adminService.getDoctor(page, size));
     }
+
+    @PutMapping("/user/{id}/block")
+    public ResponseEntity<ResponseMessage> blockUser(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.blockUser(id));
+    }
+
+    @PutMapping("/user/{id}/unblock")
+    public ResponseEntity<ResponseMessage> unblockUser(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.unblockUser(id));
+    }
+
+    @PutMapping("/user/{id}/enable")
+    public ResponseEntity<ResponseMessage> enableUser(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.enableUser(id));
+    }
 }

@@ -1,16 +1,18 @@
 package uz.medsu.sevice.serviceImpl;
 
 import io.swagger.v3.oas.annotations.servers.Server;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.*;
-import uz.medsu.enums.AppointmentStatus;
-import uz.medsu.enums.Gender;
-import uz.medsu.enums.PaymentStatus;
-import uz.medsu.enums.Roles;
+import uz.medsu.enums.*;
+import uz.medsu.event.AppointmentCreatEvent;
+import uz.medsu.event.SendEmailEvent;
+import uz.medsu.payload.EmailMessage;
 import uz.medsu.payload.appointment.AppointmentDTO;
 import uz.medsu.payload.appointment.ResponseAppointmentDTO;
 import uz.medsu.payload.cards.CardDTO;
@@ -47,6 +49,8 @@ public class UserServiceImpl implements UserService {
     private final InvoiceRepository invoiceRepository;
     private final RatingRepository ratingRepository;
     private final SpecialityRepository doctorRepository;
+    private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
     @Value("${my_var.start-time}")
     private String startTime;
     @Value("${my_var.break-time}")
@@ -66,7 +70,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("passwordChanged"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked()))
                 .build();
     }
 
@@ -83,7 +87,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("userChangedSuccess"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked()))
                 .build();
     }
 
@@ -184,6 +188,8 @@ public class UserServiceImpl implements UserService {
 
         cardRepository.save(card);
 
+
+
         return ResponseMessage
                 .builder()
                 .success(true)
@@ -201,21 +207,76 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseMessage payToInvoiceForOrder(Long orderId, PaymentDTO paymentDTO) {
+        Card card = cardRepository.findById(paymentDTO.cardId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+        DrugOrder order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("orderNotFound")));
+        Invoice invoice = order.getInvoice();
+        if (card.getBalance() < invoice.getPrice()) throw new RuntimeException(I18nUtil.getMessage("invalidBalance"));
+        invoice.setAmount(invoice.getAmount() + invoice.getPrice());
+        Card adminCard = cardRepository.findByNumber(invoice.getToCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+        adminCard.setBalance(adminCard.getBalance() + invoice.getPrice());
+        card.setBalance(card.getBalance() - invoice.getPrice());
+        invoice.setStatus(PaymentStatus.SUCCESS);
+        order.setStatus(OrderStatus.APPROVED);
+        invoice.setFromCard(card.getNumber());
+        cardRepository.save(card);
+        cardRepository.save(adminCard);
+        invoiceRepository.save(invoice);
+        orderRepository.save(order);
+
+        eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
+                order.getUser().getEmail(),
+                I18nUtil.getMessage("paymentSuccess", order.getUser()),
+                 "Your order successfully approved!"+ "\n\n\n" +
+                        "Order ID: " + order.getId() + "\n" +
+                        "Total price: " + order.getTotalPrice() + "$\n" +
+                        "Order status: " + order.getStatus() + "\n" +
+                        "Invoice ID: " + invoice.getId() + "\n" +
+                        "Invoice title: " + invoice.getTitle() + "\n" +
+                        "Amount paid: " + invoice.getAmount() + "$\n" +
+                        "Date: " + order.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
+                        "Time: " + order.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
+
+        )));
+        return ResponseMessage.builder()
+                .success(true)
+                .message(I18nUtil.getMessage("paymentSuccess"))
+                .data(new ResponseInvoiceDTO(invoice.getId(), invoice.getTitle(), invoice.getDescription(), invoice.getTo().getId(), invoice.getFrom().getId(), invoice.getPrice(), invoice.getAmount(), invoice.getStatus().toString(), invoice.getCreatedAt().toLocalDateTime().toString(), invoice.getUpdatedAt().toLocalDateTime().toString()))
+                .build();
+    }
+
+    @Override
     public ResponseMessage payToInvoiceForAppointment(Long id, PaymentDTO paymentDTO) {
         Card card = cardRepository.findById(paymentDTO.cardId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
         Appointment appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
         Invoice invoice = appointment.getInvoice();
         if (card.getBalance() < invoice.getPrice()) throw new RuntimeException(I18nUtil.getMessage("invalidBalance"));
         invoice.setAmount(invoice.getAmount() + invoice.getPrice());
-        Card adminCard = cardRepository.findByNumber("9860120105531434").orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+        Card adminCard = cardRepository.findByNumber(invoice.getToCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
         adminCard.setBalance(adminCard.getBalance() + invoice.getPrice());
         card.setBalance(card.getBalance() - invoice.getPrice());
         invoice.setStatus(PaymentStatus.SUCCESS);
         appointment.setStatus(AppointmentStatus.APPROVED);
+        invoice.setFromCard(card.getNumber());
         cardRepository.save(card);
         cardRepository.save(adminCard);
         invoiceRepository.save(invoice);
         appointmentRepository.save(appointment);
+
+        eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
+                appointment.getUser().getEmail(),
+                I18nUtil.getMessage("paymentSuccess", appointment.getUser()),
+                "Your appointment successfully approved!"+ "\n\n\n" +
+                        "Appointment ID: " + appointment.getId() + "\n" +
+                        "Total price: " + appointment.getDoctor().getAppointmentPrice() + "$\n" +
+                        "Appointment status: " + appointment.getStatus() + "\n" +
+                        "Invoice ID: " + invoice.getId() + "\n" +
+                        "Invoice title: " + invoice.getTitle() + "\n" +
+                        "Amount paid: " + invoice.getAmount() + "$\n" +
+                        "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
+                        "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
+
+        )));
 
         return ResponseMessage.builder()
                 .success(true)
@@ -308,11 +369,27 @@ public class UserServiceImpl implements UserService {
                 .title("Appointment payment")
                 .status(PaymentStatus.WAITING)
                 .to(userRepository.findByProfession(Roles.ADMIN).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound"))))
+                .toCard("9860120105531434")
                 .from(appointment.getUser())
                 .build();
         invoiceRepository.save(invoice);
         appointment.setInvoice(invoice);
         appointmentRepository.save(appointment);
+
+        eventPublisher.publishEvent(new AppointmentCreatEvent(appointment));
+        eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
+                Util.getCurrentUser().getEmail(),
+                "You have created new appointment!",
+                I18nUtil.getMessage("appointmentCreated") + "\n\n\n" +
+                        "Appointment ID: " + appointment.getId() + "\n" +
+                        "Appointment status: " + appointment.getStatus() + "\n" +
+                        "Total price: " + appointment.getDoctor().getAppointmentPrice() + "$\n" +
+                        "Invoice ID: " + invoice.getId() + "\n" +
+                        "Invoice title: " + invoice.getTitle() + "\n" +
+                        "Amount paid: " + invoice.getAmount() + "$\n" +
+                        "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
+                        "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
+        )));
         return ResponseMessage
                 .builder()
                 .success(true)
@@ -327,12 +404,70 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException(I18nUtil.getMessage("setStatusError"));
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
-        appointment.getInvoice().setStatus(PaymentStatus.CANCELLED);
-        invoiceRepository.save(appointment.getInvoice());
+        Invoice invoice = appointment.getInvoice();
+        invoice.setStatus(PaymentStatus.CANCELLED);
+
+        if (invoice.getAmount()>0) {
+            Card to = cardRepository.findByNumber("9860120105531434").orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+            Card from = cardRepository.findByNumber(invoice.getFromCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+            to.setBalance(to.getBalance()-invoice.getAmount());
+            from.setBalance(from.getBalance()+invoice.getAmount());
+            cardRepository.save(to);
+            cardRepository.save(from);
+        }
+
+        invoiceRepository.save(invoice);
+
+        eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
+                Util.getCurrentUser().getEmail(),
+                "You have canceled appointment!",
+                I18nUtil.getMessage("appointmentCancel") + "\n\n\n" +
+                        "Appointment ID: " + appointment.getId() + "\n" +
+                        "Appointment status: " + appointment.getStatus() + "\n" +
+                        "Total price: " + appointment.getDoctor().getAppointmentPrice() + "$\n" +
+                        "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
+                        "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
+        )));
         return ResponseMessage
                 .builder()
                 .success(true)
-                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
+                .message(I18nUtil.getMessage("appointmentCancel"))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage autoCancelAppointment(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
+        if (appointment.getStatus().equals(AppointmentStatus.APPROVED)) throw new RuntimeException("Appointment approved, cannot cancel!");
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointmentRepository.save(appointment);
+        Invoice invoice = appointment.getInvoice();
+        invoice.setStatus(PaymentStatus.CANCELLED);
+        if (invoice.getAmount()>0) {
+            Card to = cardRepository.findByNumber("9860120105531434").orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+            Card from = cardRepository.findByNumber(invoice.getFromCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+            to.setBalance(to.getBalance()-invoice.getAmount());
+            from.setBalance(from.getBalance()+invoice.getAmount());
+            cardRepository.save(to);
+            cardRepository.save(from);
+        }
+        invoiceRepository.save(invoice);
+
+        eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
+                appointment.getUser().getEmail(),
+                "You have canceled appointment!",
+                I18nUtil.getMessage("appointmentAutoCancel", appointment.getUser()) + "\n\n\n" +
+                        "Appointment ID: " + appointment.getId() + "\n" +
+                        "Appointment status: " + appointment.getStatus() + "\n" +
+                        "Amount paid: " + invoice.getAmount() + "$\n" +
+                        "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
+                        "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
+        )));
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), invoice.getId()))
                 .build();
     }
 

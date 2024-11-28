@@ -24,5 +24,7 @@ public interface UserService {
     ResponseMessage evaluateDoctor(Long appointmentId, Double mark);
     ResponseMessage addAppointment(AppointmentDTO appointment);
     ResponseMessage cancelAppointment(Long appointmentId);
+    ResponseMessage autoCancelAppointment(Long appointmentId);
     ResponseMessage deletePaymentMethod(Long id);
+    ResponseMessage payToInvoiceForOrder(Long orderId, PaymentDTO paymentDTO);
 }

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Upload</title>
+    <style>
+        /* Basic styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 25px;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            top: 50%;
+            left: 110%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 100%;
+            transform: translateY(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent #555 transparent transparent;
+        }
+
+        #myContent {
+            border: none;
+            background-color: #fff;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Upload an Image with Bearer Token</h2>
+
+<!-- Form to upload image -->
+<form id="fileForm" enctype="multipart/form-data">
+    <label for="fileInput">Choose an image:</label>
+    <input type="file" name="file" id="fileInput" accept="image/*" required>
+    <br><br>
+    <label for="tokenInput">Bearer Token:</label>
+    <input type="text" id="tokenInput" placeholder="Enter Bearer Token" required>
+    <br><br>
+    <button type="submit">Upload</button>
+</form>
+
+<div id="response"></div>
+
+<script>
+    // Handle form submission
+    document.getElementById('fileForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent form submission
+
+        const fileInput = document.getElementById('fileInput');
+        const tokenInput = document.getElementById('tokenInput').value.trim();
+        const formData = new FormData();
+
+        // Ensure a file is selected
+        if (!fileInput.files[0]) {
+            alert("Please select a file to upload.");
+            return;
+        }
+
+        // Append the file to the FormData object
+        formData.append('file', fileInput.files[0]);
+
+        // Check if token is provided
+        if (!tokenInput) {
+            alert("Please provide a Bearer token.");
+            return;
+        }
+
+        // Make a POST request to upload the image with Bearer token
+        fetch('http://localhost:8080/api/image/3/drug', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${tokenInput}`,  // Add Bearer token to the request
+            },
+            body: formData,
+            mode: 'no-cors'
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerHTML = `<p>Success: ${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => {
+                document.getElementById('response').innerHTML = `<p>Error: ${error.message}</p>`;
+                console.error('Error:', error);
+            });
+    });
+</script>
+
+</body>
+</html>

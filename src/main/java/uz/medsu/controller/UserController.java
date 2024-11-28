@@ -57,6 +57,12 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('POST')")
+    @PostMapping("/payment/{id}/order")
+    public ResponseEntity<ResponseMessage> paymentForOrder(@RequestBody PaymentDTO paymentDTO, @PathVariable Long id) {
+        return ResponseEntity.ok(userService.payToInvoiceForOrder(id, paymentDTO));
+    }
+
+    @PreAuthorize("hasAuthority('POST')")
     @PostMapping("/appointment")
     public ResponseEntity<ResponseMessage> addAppointment(@RequestBody AppointmentDTO appointmentDTO) {
         return ResponseEntity.ok(userService.addAppointment(appointmentDTO));
