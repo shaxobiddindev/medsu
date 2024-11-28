@@ -5,7 +5,6 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn package -DskipTests
 
-# Second stage: create the runtime image
 FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 COPY --from=build /app/target/*.jar app.jar
