@@ -49,9 +49,10 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(userDTO.password(), user.getPassword())) {
             throw new RuntimeException(I18nUtil.getMessage("usernameOrPasswordWrong", user));
         }
-//        if (!user.getPassword().equals(userDTO.password())) {
-//            throw new RuntimeException("Wrong password");
-//        }
+
+        if(!user.isEnabled())throw new RuntimeException("Your account is inactive, please confirm your email!");
+        if(!user.getIsNonLocked())throw new RuntimeException("Your account is blocked, please contact admin!");
+
         String token = jwtProvider.generateToken(user);
 
 //        byte[] encode = Base64.getEncoder().encode((user.getUsername() + ":" + user.getPassword()).getBytes());
@@ -93,13 +94,13 @@ public class AuthServiceImpl implements AuthService {
                 .locale("en")
                 .build();
         userRepository.save(user);
-        ResponseMessage responseMessage = confirmResendCode(user.getEmail(), CodeType.ACCOUNT);
+        ResponseMessage responseMessage = confirmResendCode(user.getEmail());
         return ResponseMessage.builder().success(true).message("Sign Up successfully, "+ responseMessage.getMessage()).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked())).build();
     }
 
     @Override
     public ResponseMessage confirmEmail(EmailConfirmDTO emailDTO) {
-        Code code = codeRepository.findByEmailAndType(emailDTO.email(), CodeType.ACCOUNT).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
+        Code code = codeRepository.findByEmail(emailDTO.email()).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
         if (code.getExpired().toLocalDateTime().isBefore(LocalDateTime.now()) ||
                 !code.getCode().equals(emailDTO.code())
         ) throw new RuntimeException("Verification code is invalid or expired!");
@@ -109,9 +110,10 @@ public class AuthServiceImpl implements AuthService {
         return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("accountConfirmed", user)).build();
     }
 
+
     @Override
-    public ResponseMessage confirmResendCode(String email , CodeType codeType) {
-        Optional<Code> optionalCode = codeRepository.findByEmailAndType(email, codeType);
+    public ResponseMessage confirmResendCode(String email, CodeType codeType) {
+        Optional<Code> optionalCode = codeRepository.findByEmailAndType(email);
         if (optionalCode.isPresent() && optionalCode.get().getExpired().toLocalDateTime().isAfter(LocalDateTime.now())) {
             throw new RuntimeException("Code doesn't expired!");
         }
@@ -124,7 +126,6 @@ public class AuthServiceImpl implements AuthService {
             code = Code
                     .builder()
                     .code(generateCode())
-                    .type(codeType)
                     .expired(Timestamp.valueOf(LocalDateTime.now().plusMinutes(1)))
                     .email(email)
                     .build();
@@ -147,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseMessage confirmEmailForResetPassword(EmailConfirmDTO emailDTO) {
-        Code code = codeRepository.findByEmailAndType(emailDTO.email(), CodeType.PASSWORD).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
+        Code code = codeRepository.findByEmail(emailDTO.email()).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
         if (code.getExpired().toLocalDateTime().isBefore(LocalDateTime.now()) ||
                 !code.getCode().equals(emailDTO.code())
         ) throw new RuntimeException("Verification code is invalid or expired!");

@@ -7,9 +7,9 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
-        String  now = LocalDateTime.now().plusHours(5).toString();
+        LocalDateTime  now = LocalDateTime.now().minusMinutes(5);
 
-        System.out.println(LocalDateTime.parse(now));
+        System.out.println(now.isBefore(LocalDateTime.now()));
         System.out.println(now);
     }
 }

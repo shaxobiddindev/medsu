@@ -54,7 +54,7 @@ public class AuthController {
 
     @PostMapping("/password/resend-code")
     public ResponseEntity<?> passwordResendCode(@RequestBody String email){
-        return ResponseEntity.ok(authService.confirmResendCode(email, CodeType.ACCOUNT));
+        return ResponseEntity.ok(authService.confirmResendCode(email, CodeType.PASSWORD));
     }
 
     @PostMapping("/password")
