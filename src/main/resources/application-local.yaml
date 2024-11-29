@@ -4,9 +4,9 @@ spring:
   application:
     name: medsu
   datasource:
-    url: jdbc:postgresql://localhost:5432/medsu
+    url: jdbc:postgresql://db/medsu
     username: postgres
-    password: root123
+    password: Uralov2005
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true

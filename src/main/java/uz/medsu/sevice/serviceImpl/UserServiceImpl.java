@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("passwordChanged"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 
@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("userChangedSuccess"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 

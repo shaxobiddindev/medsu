@@ -4,9 +4,9 @@ spring:
   application:
     name: medsu
   datasource:
-    url: jdbc:postgresql://dpg-ct463dl6l47c73f6srrg-a/medsu
-    username: shaxobiddin
-    password: 3AcRQTsj8vpoawu40kO38HeD8kVKK28m
+    url: jdbc:postgresql://db/medsu
+    username: postgres
+    password: Uralov2005
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
@@ -14,14 +14,12 @@ spring:
       ddl-auto: update
   sql:
     init:
-      mode: never
+      mode: always
 my_token:
-
   key: ShaxobiddinUralovJavaBackendDeveloper
   expire_pass_time: 300000
   expire_time: 86400000
 my_var:
-  appliation_url: https://medsu-u6mi.onrender.com
   start-time: "10:00"
   break-time: "12:00"
   end-time: "17:00"
@@ -30,3 +28,4 @@ imgur:
 server:
   servlet:
     context-path: /api
+  port: 8080

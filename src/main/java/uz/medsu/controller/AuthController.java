@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medsu.config.JwtProvider;
 import uz.medsu.enums.CodeType;
-import uz.medsu.payload.users.EmailConfirmDTO;
-import uz.medsu.payload.users.ForgotPasswordDTO;
-import uz.medsu.payload.users.SignInDTO;
-import uz.medsu.payload.users.UserDTO;
+import uz.medsu.payload.users.*;
 import uz.medsu.repository.UserRepository;
 import uz.medsu.sevice.AuthService;
 import uz.medsu.utils.ResponseMessage;
@@ -38,8 +35,8 @@ public class AuthController {
     }
 
     @PostMapping("/account/resend-code")
-    public ResponseEntity<?> resendCode(@RequestBody String email){
-        return ResponseEntity.ok(authService.confirmResendCode(email, CodeType.ACCOUNT));
+    public ResponseEntity<?> resendCode(@RequestBody EmailDTO email){
+        return ResponseEntity.ok(authService.confirmResendCode(email.email(), CodeType.ACCOUNT));
     }
 
     @PostMapping("/account/confirm")
@@ -53,8 +50,8 @@ public class AuthController {
     }
 
     @PostMapping("/password/resend-code")
-    public ResponseEntity<?> passwordResendCode(@RequestBody String email){
-        return ResponseEntity.ok(authService.confirmResendCode(email, CodeType.PASSWORD));
+    public ResponseEntity<?> passwordResendCode(@RequestBody EmailDTO email){
+        return ResponseEntity.ok(authService.confirmResendCode(email.email(), CodeType.PASSWORD));
     }
 
     @PostMapping("/password")

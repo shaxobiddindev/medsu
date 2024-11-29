@@ -11,6 +11,7 @@ public record ReturnUserDTO(
         String gender,
         Role role,
         Boolean enable,
-        Boolean accountNonBlocked
+        Boolean accountNonBlocked,
+        String imageUrl
 ) {
 }

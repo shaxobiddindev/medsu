@@ -19,7 +19,8 @@ public class Code {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String code;
-    @Column(unique = true)
     private String email;
+    @Enumerated(EnumType.STRING)
+    private CodeType type;
     private Timestamp expired;
 }
