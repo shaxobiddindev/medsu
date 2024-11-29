@@ -16,8 +16,7 @@ public class JwtProvider {
     String key;
     @Value("${my_token.expire_time}")
     Long expireTime;
-    @Value("${my_token.expire_pass_time}")
-    Long expirePassTime;
+
 
     public String generateToken(UserDetails userDetails) {
         Date date = new Date(System.currentTimeMillis()+expireTime);
@@ -25,7 +24,6 @@ public class JwtProvider {
                 .builder()
                 .setIssuedAt(new Date())
                 .setSubject(userDetails.getUsername())
-                .setExpiration(date)
                 .signWith(signKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
