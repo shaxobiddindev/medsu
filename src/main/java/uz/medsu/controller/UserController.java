@@ -46,8 +46,14 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('READ')")
     @GetMapping("/invoince")
-    public ResponseEntity<ResponseMessage> getInvoice(Integer page, Integer size) {
+    public ResponseEntity<ResponseMessage> getInvoices(Integer page, Integer size) {
         return ResponseEntity.ok(userService.paymentHistory(page, size));
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
+    @GetMapping("/{id}/invoince")
+    public ResponseEntity<ResponseMessage> getInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getInvoice(id));
     }
 
     @PreAuthorize("hasAuthority('POST')")

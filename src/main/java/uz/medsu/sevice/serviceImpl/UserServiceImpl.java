@@ -39,6 +39,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.util.ClassUtils.isPresent;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -246,6 +248,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseMessage getInvoice(Long id) {
+        Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("invoiceNotFound")));
+        if (!invoice.getFrom().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException(I18nUtil.getMessage("invoiceNotFound"));
+        return ResponseMessage.builder().success(true).data(
+                new ResponseInvoiceDTO(
+                        invoice.getId(),
+                        invoice.getTitle(),
+                        invoice.getDescription(),
+                        invoice.getTo().getId(),
+                        invoice.getFrom().getId(),
+                        invoice.getPrice(),
+                        invoice.getAmount(),
+                        invoice.getStatus().toString(),
+                        invoice.getCreatedAt().toLocalDateTime().toString(),
+                        invoice.getUpdatedAt().toLocalDateTime().toString()
+                )
+        ).build();
+     }
+
+    @Override
     public ResponseMessage payToInvoiceForAppointment(Long id, PaymentDTO paymentDTO) {
         Card card = cardRepository.findById(paymentDTO.cardId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
         Appointment appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
@@ -360,8 +382,15 @@ public class UserServiceImpl implements UserService {
                 .time(formatTimes(appointmentDTO.time()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("timeFormatError"))))
                 .status(AppointmentStatus.UNPAID)
                 .build();
-        if (appointmentRepository.findByDateAndTime(appointment.getDate(), appointment.getTime()).isPresent())
-            throw new RuntimeException(I18nUtil.getMessage("dateTimeExists"));
+
+        Optional<Appointment> byDateAndTime = appointmentRepository.findByDateAndTime(appointment.getDate(), appointment.getTime());
+
+        if (byDateAndTime.isPresent()){
+            Appointment existAppointment = byDateAndTime.get();
+            if (existAppointment.getStatus().equals(AppointmentStatus.UNPAID)
+            || existAppointment.getStatus().equals(AppointmentStatus.APPROVED))
+                throw new RuntimeException(I18nUtil.getMessage("dateTimeExists"));
+        }
         Invoice invoice = Invoice
                 .builder()
                 .price(appointment.getDoctor().getAppointmentPrice())
@@ -393,6 +422,7 @@ public class UserServiceImpl implements UserService {
         return ResponseMessage
                 .builder()
                 .success(true)
+                .message(I18nUtil.getMessage("appointmentCreated"))
                 .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
                 .build();
     }

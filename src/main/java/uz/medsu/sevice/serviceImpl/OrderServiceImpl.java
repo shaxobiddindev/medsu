@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final InvoiceRepository invoiceRepository;
     private final CardRepository cardRepository;
+    private final DrugRepository drugRepository;
 
     private SendEmailEvent sendEmailEvent;
 
@@ -73,7 +75,10 @@ public class OrderServiceImpl implements OrderService {
         order.setInvoice(invoice);
         orderRepository.save(order);
 
+        minusDrugQuantity(basketDrugs);
+
         clearBasket(basket);
+
         eventPublisher.publishEvent(new OrderCreatedEvent(order));
         eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
                 Util.getCurrentUser().getEmail(),
@@ -91,6 +96,7 @@ public class OrderServiceImpl implements OrderService {
         return ResponseMessage
                 .builder()
                 .success(true)
+                .message(I18nUtil.getMessage("orderCreated"))
                 .data(
                         new ResponseOrderDTO(
                                 order.getId(),
@@ -102,6 +108,25 @@ public class OrderServiceImpl implements OrderService {
                         )
                 )
                 .build();
+    }
+
+    private void minusDrugQuantity(List<BasketDrug> basketDrugs){
+        for (BasketDrug basketDrug : basketDrugs) {
+            Drug drug = basketDrug.getDrug();
+            drug.setQuantity(drug.getQuantity() - basketDrug.getCount());
+            drugRepository.save(drug);
+        }
+    }
+
+    private void plusDrugQuantity(List<DrugClone> drugClones){
+        for (DrugClone drugClone : drugClones) {
+            Optional<Drug> optionalDrug = drugRepository.findById(drugClone.getDrugId());
+            if (optionalDrug.isPresent()){
+                Drug drug = optionalDrug.get();
+                drug.setQuantity(drug.getQuantity() + drugClone.getQuantity());
+                drugRepository.save(drug);
+            }
+        }
     }
 
     @Override
@@ -125,6 +150,8 @@ public class OrderServiceImpl implements OrderService {
             cardRepository.save(to);
             cardRepository.save(from);
         }
+
+        plusDrugQuantity(order.getDrugs());
 
         orderRepository.save(order);
 
@@ -155,6 +182,37 @@ public class OrderServiceImpl implements OrderService {
                 "Basket cleared!",
                 "Your basket cleared at: " + LocalDateTime.now().toLocalDate().toString() + "  " + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
         )));
+    }
+
+    @Override
+    public ResponseMessage getOrders(Integer page, Integer size) {
+        List<ResponseOrderDTO> orderDTOS = orderRepository.findByUser(Util.getCurrentUser()).stream().map(drugOrder -> {
+            return new ResponseOrderDTO(
+                    drugOrder.getId(),
+                    drugOrder.getDrugs(),
+                    drugOrder.getLatitude(),
+                    drugOrder.getLongitude(),
+                    drugOrder.getTotalPrice(),
+                    drugOrder.getInvoice().getId()
+            );
+        }).toList();
+        return ResponseMessage.builder().success(true).data(orderDTOS).build();
+    }
+
+    @Override
+    public ResponseMessage getOrder(Long id) {
+        DrugOrder order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("orderNotFound")));
+        if (!order.getUser().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException(I18nUtil.getMessage("orderNotFound"));
+        return ResponseMessage.builder().success(true).data(
+                new ResponseOrderDTO(
+                        order.getId(),
+                        order.getDrugs(),
+                        order.getLatitude(),
+                        order.getLongitude(),
+                        order.getTotalPrice(),
+                        order.getInvoice().getId()
+                )
+        ).build();
     }
 
     private void clearBasket(Basket basket) {

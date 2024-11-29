@@ -31,6 +31,7 @@ public class BasketServiceImpl implements BasketService {
         if (drugCount == null || drugCount <= 0) throw new RuntimeException(I18nUtil.getMessage("drugCountIsNull"));
         Basket basket = getMyBasket();
         Drug drug = drugRepository.findById(drugId).orElseThrow(() -> new RuntimeException("drugNotFound"));
+        if (drug.getQuantity() < drugCount) throw new RuntimeException("Drug count invalid!");
         Optional<BasketDrug> optionalBasketDrug = basketDrugRepository.findByDrug(drug);
         BasketDrug basketDrug;
         if (optionalBasketDrug.isEmpty()){

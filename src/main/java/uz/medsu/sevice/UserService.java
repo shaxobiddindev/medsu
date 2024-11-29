@@ -27,4 +27,6 @@ public interface UserService {
     ResponseMessage autoCancelAppointment(Long appointmentId);
     ResponseMessage deletePaymentMethod(Long id);
     ResponseMessage payToInvoiceForOrder(Long orderId, PaymentDTO paymentDTO);
+
+    ResponseMessage getInvoice(Long id);
 }

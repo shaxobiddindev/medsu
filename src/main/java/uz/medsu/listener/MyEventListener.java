@@ -32,8 +32,6 @@ public class MyEventListener {
     private EmailService emailService;
 
     private final TaskScheduler scheduler;
-    @Autowired
-    private AuthService authService;
 
     public MyEventListener() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
