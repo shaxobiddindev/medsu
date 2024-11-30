@@ -3,7 +3,6 @@ package uz.medsu.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uz.medsu.payload.drugs.OrderDTO;
 import uz.medsu.sevice.OrderService;
 import uz.medsu.utils.ResponseMessage;
 
@@ -13,9 +12,9 @@ import uz.medsu.utils.ResponseMessage;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping
-    private ResponseEntity<ResponseMessage> addOrder(@RequestBody OrderDTO order) {
-        return ResponseEntity.ok(orderService.createOrder(order));
+    @PostMapping("/{id}")
+    private ResponseEntity<ResponseMessage> addOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.createOrder(id));
     }
 
     @GetMapping("/{id}")

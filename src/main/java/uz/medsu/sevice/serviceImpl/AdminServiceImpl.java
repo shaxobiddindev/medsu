@@ -10,6 +10,7 @@ import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
 import uz.medsu.payload.users.ReturnUserDTO;
 import uz.medsu.payload.SetDoctorDTO;
+import uz.medsu.payload.users.UserDTO;
 import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.repository.*;
 import uz.medsu.sevice.AdminService;
@@ -33,6 +34,7 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
     private final SpecialityRepository specialityRepository;
+    private final EmailCheckerService emailCheckerService;
     @Value("${my_var.start-time}")
     private String startTime;
     @Value("${my_var.break-time}")
@@ -65,7 +67,7 @@ public class AdminServiceImpl implements AdminService {
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         specialityRepository.save(speciality);
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
     }
 
     @Override
@@ -80,7 +82,7 @@ public class AdminServiceImpl implements AdminService {
         user.setProfession(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
         user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
+        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
     }
 
     @Override
@@ -132,10 +134,35 @@ public class AdminServiceImpl implements AdminService {
         return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("enableUser")).build();
     }
 
+    @Override
+    public ResponseMessage addUser(UserDTO userDTO) {
+        if (userRepository.existsByUsername(userDTO.username()))
+            throw new RuntimeException("Username already exists!");
+        if (emailCheckerService.isValidEmailFormat(userDTO.email()) || emailCheckerService.isValidEmailAddress(userDTO.email()))
+            throw new RuntimeException("Invalid email address!");
+        if (userRepository.existsByEmail(userDTO.email()))
+            throw new RuntimeException("Email already exists");
+        User user = User
+                .builder()
+                .email(userDTO.email())
+                .password(userDTO.password())
+                .build();
+        return null;
+    }
+
+    @Override
+    public ResponseMessage deleteUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        Role role = user.getRole();
+        userRepository.deleteById(id);
+        roleRepository.delete(role);
+        return ResponseMessage.builder().success(true).message("User deleted! ID: " + id).build();
+    }
+
     private List<ReturnUserDTO> usersReturn(List<User> users) {
         List<ReturnUserDTO> returnUsers = new ArrayList<>();
         for (User user : users) {
-            returnUsers.add(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()));
+            returnUsers.add(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()));
         }
         return returnUsers;
     }
@@ -145,28 +172,5 @@ public class AdminServiceImpl implements AdminService {
             if (!authorityRepository.existsById(id)) return true;
         }
         return false;
-    }
-
-
-    private Optional<Timestamp> checkDate(String date) {
-        try {
-            LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            return !DayOfWeek.SUNDAY.equals(localDate.getDayOfWeek()) ? Optional.of(Timestamp.valueOf(LocalDateTime.of(localDate, LocalTime.of(0,0)))) : Optional.empty();
-        } catch (Exception e) {
-            throw new RuntimeException(I18nUtil.getMessage("dateFormatError"));
-        }
-    }
-
-    private Optional<String> formatTimes(String time) {
-        try {
-            if (!time.split(":")[1].equals("00"))throw new RuntimeException(I18nUtil.getMessage("timeFormatError"));
-            int start = LocalTime.parse(startTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            int breakHour = LocalTime.parse(breakTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            int end = LocalTime.parse(endTime, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            int inputTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm")).getHour();
-            return (start <= inputTime && end > inputTime && breakHour != inputTime) ? Optional.of(time) : Optional.empty();
-        } catch (Exception e) {
-            throw new RuntimeException(I18nUtil.getMessage("timeFormatError"));
-        }
     }
 }

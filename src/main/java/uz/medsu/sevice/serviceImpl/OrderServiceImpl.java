@@ -2,7 +2,6 @@ package uz.medsu.sevice.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.*;
@@ -12,10 +11,8 @@ import uz.medsu.enums.Roles;
 import uz.medsu.event.OrderCreatedEvent;
 import uz.medsu.event.SendEmailEvent;
 import uz.medsu.payload.EmailMessage;
-import uz.medsu.payload.drugs.OrderDTO;
 import uz.medsu.payload.drugs.ResponseOrderDTO;
 import uz.medsu.repository.*;
-import uz.medsu.sevice.EmailService;
 import uz.medsu.sevice.OrderService;
 import uz.medsu.utils.I18nUtil;
 import uz.medsu.utils.ResponseMessage;
@@ -39,26 +36,28 @@ public class OrderServiceImpl implements OrderService {
     private final InvoiceRepository invoiceRepository;
     private final CardRepository cardRepository;
     private final DrugRepository drugRepository;
+    private final LocationRepository locationRepository;
 
     private SendEmailEvent sendEmailEvent;
 
     @Override
-    public ResponseMessage createOrder(OrderDTO orderDTO) {
-        Basket basket = basketRepository.findById(orderDTO.basketId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("basketNotFound")));
+    public ResponseMessage createOrder(Long id) {
+        Basket basket = basketRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("basketNotFound")));
         if (!basket.getUser().getId().equals(Util.getCurrentUser().getId()))
             throw new RuntimeException(I18nUtil.getMessage("basketNotFound"));
         List<BasketDrug> basketDrugs = basketDrugRepository.findByBasket(basket);
 
         List<DrugClone> drugClones = parseDrugClone(basketDrugs);
 
+        Location location = locationRepository.findByUser(Util.getCurrentUser()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("locationNotFound")));
 
         DrugOrder order = DrugOrder
                 .builder()
                 .user(basket.getUser())
                 .status(OrderStatus.PAYMENT_PENDING)
                 .drugs(drugClones)
-                .longitude(orderDTO.longitude())
-                .latitude(orderDTO.latitude())
+                .longitude(location.getLongitude())
+                .latitude(location.getLatitude())
                 .totalPrice(basket.getTotalPrice())
                 .build();
 
@@ -136,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus().equals(OrderStatus.CANCELLED))
             throw new RuntimeException(I18nUtil.getMessage("orderNotFound"));
 
-        if (!order.getStatus().equals(OrderStatus.PAYMENT_PENDING))
+        if (autoCancel && !order.getStatus().equals(OrderStatus.PAYMENT_PENDING))
             throw new RuntimeException(I18nUtil.getMessage("orderNotFound"));
 
         order.setStatus(OrderStatus.CANCELLED);

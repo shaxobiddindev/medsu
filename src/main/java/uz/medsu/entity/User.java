@@ -32,8 +32,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Gender gender;
     private String password;
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
+    @Column(unique = true)
+    private String username;
     @Column(unique = true)
     private String phone;
     private String imageUrl;
@@ -53,11 +55,6 @@ public class User implements UserDetails {
             authorities.add(new SimpleGrantedAuthority(authority.getAuthorities().toString()));
         }
         return authorities;
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
     }
 
     @Override

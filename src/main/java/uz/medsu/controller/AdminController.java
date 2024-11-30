@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.medsu.payload.SetDoctorDTO;
+import uz.medsu.payload.users.UserDTO;
 import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.sevice.AdminService;
 import uz.medsu.utils.ResponseMessage;
@@ -50,6 +51,18 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<ResponseMessage> getUsers(Integer page, Integer size) {
         return ResponseEntity.ok(adminService.getUsers(page, size));
+    }
+
+    @PreAuthorize(value = "hasAnyAuthority('GET','EDIT','DELETE','READ','POST','SET_DOCTOR', 'BLOCK_USER')")
+    @PostMapping("/user")
+    public ResponseEntity<ResponseMessage> addUser(UserDTO userDTO) {
+        return ResponseEntity.ok(adminService.addUser(userDTO));
+    }
+
+    @PreAuthorize(value = "hasAnyAuthority('GET','EDIT','DELETE','READ','POST','SET_DOCTOR', 'BLOCK_USER', 'PERMISSION_CHANGE')")
+    @DeleteMapping("/{id}/user")
+    public ResponseEntity<ResponseMessage> delete(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.deleteUser(id));
     }
 
     @PreAuthorize(value = "hasAnyAuthority('GET','EDIT','DELETE','READ','POST','SET_DOCTOR', 'BLOCK_USER')")

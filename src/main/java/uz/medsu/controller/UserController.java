@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.*;
 import uz.medsu.payload.appointment.AppointmentDTO;
 import uz.medsu.payload.cards.CardDTO;
 import uz.medsu.payload.cards.PaymentDTO;
+import uz.medsu.payload.cards.TopUpCardDTO;
 import uz.medsu.payload.users.EditPasswordDTO;
 import uz.medsu.payload.users.EditUserDTO;
+import uz.medsu.payload.users.LocationDTO;
 import uz.medsu.payload.users.UserDTO;
 import uz.medsu.sevice.UserService;
 import uz.medsu.utils.ResponseMessage;
@@ -16,7 +18,6 @@ import uz.medsu.utils.ResponseMessage;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
-@PreAuthorize(value = "hasRole('USER')")
 public class UserController {
     private final UserService userService;
 
@@ -33,6 +34,24 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('READ')")
+    @GetMapping
+    public ResponseEntity<ResponseMessage> profile() {
+        return ResponseEntity.ok(userService.profile());
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
+    @GetMapping("/location")
+    public ResponseEntity<ResponseMessage> getLocation() {
+        return ResponseEntity.ok(userService.getLocation());
+    }
+
+    @PreAuthorize("hasAuthority('EDIT')")
+    @PutMapping("/location")
+    public ResponseEntity<ResponseMessage> setLocation(LocationDTO locationDTO){
+        return ResponseEntity.ok(userService.setLocation(locationDTO));
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
     @GetMapping("/{id}/appointment")
     public ResponseEntity<ResponseMessage> getAppointment(@PathVariable Long id) {
         return ResponseEntity.ok(userService.showAppointment(id));
@@ -45,13 +64,13 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('READ')")
-    @GetMapping("/invoince")
+    @GetMapping("/invoice")
     public ResponseEntity<ResponseMessage> getInvoices(Integer page, Integer size) {
         return ResponseEntity.ok(userService.paymentHistory(page, size));
     }
 
     @PreAuthorize("hasAuthority('READ')")
-    @GetMapping("/{id}/invoince")
+    @GetMapping("/{id}/invoice")
     public ResponseEntity<ResponseMessage> getInvoice(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getInvoice(id));
     }
@@ -86,6 +105,12 @@ public class UserController {
         return ResponseEntity.ok(userService.addPaymentMethod(cardDTO));
     }
 
+    @PreAuthorize("hasAuthority('EDIT')")
+    @PutMapping("/payment/top-up")
+    public ResponseEntity<ResponseMessage> topUpBalance(@RequestBody TopUpCardDTO cardDTO) {
+        return ResponseEntity.ok(userService.topUpCard(cardDTO));
+    }
+
     @PreAuthorize("hasAuthority('READ')")
     @GetMapping("/payment")
     public ResponseEntity<ResponseMessage> showPaymentMethod() {
@@ -99,7 +124,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('READ')")
-    @GetMapping("/doctor")
+    @GetMapping("/doctors/top")
     public ResponseEntity<ResponseMessage> getDoctors(Integer page, Integer size) {
         return ResponseEntity.ok(userService.showTopDoctors(page, size));
     }

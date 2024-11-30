@@ -41,11 +41,12 @@ public class AuthServiceImpl implements AuthService {
     private final CodeRepository codeRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordKeyRepository passwordKeyRepository;
+    private final EmailCheckerService emailCheckerService;
     private final Random random = new Random();
 
     @Override
     public ResponseMessage login(SignInDTO userDTO) {
-        User user = userRepository.findByEmail(userDTO.email()).orElseThrow(RuntimeException::new);
+        User user = userRepository.findByUsernameOrEmail(userDTO.username(), userDTO.username()).orElseThrow(() -> new RuntimeException("Username or password is incorrect!"));
         if (!passwordEncoder.matches(userDTO.password(), user.getPassword())) {
             throw new RuntimeException(I18nUtil.getMessage("usernameOrPasswordWrong", user));
         }
@@ -60,11 +61,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseMessage signUp(UserDTO userDTO) {
-        if (userRepository.existsByEmail(userDTO.email())) {
-            throw new RuntimeException("User already exists");
-        }
-        if (!(userDTO.gender().toUpperCase().equals(Gender.MALE.toString()) || userDTO.gender().toUpperCase().equals(Gender.FEMALE.toString())))
-            throw new RuntimeException("Invalid gender");
+        if (emailCheckerService.isValidEmailFormat(userDTO.email()) || emailCheckerService.isValidEmailAddress(userDTO.email()))
+            throw new RuntimeException("Invalid email address!");
+        if (userRepository.existsByUsername(userDTO.username()))
+            throw new RuntimeException("Username already exists!");
+        if (userRepository.existsByEmail(userDTO.email()))
+            throw new RuntimeException("Email already exists");
+
+//        if (!(userDTO.gender().toUpperCase().equals(Gender.MALE.toString()) || userDTO.gender().toUpperCase().equals(Gender.FEMALE.toString())))
+//            throw new RuntimeException("Invalid gender");
         Role role = Role.builder()
                 .name(Roles.USER)
                 .authorities(authorityRepository
@@ -81,11 +86,12 @@ public class AuthServiceImpl implements AuthService {
         User user = User
                 .builder()
                 .email(userDTO.email())
+                .username(userDTO.username())
                 .password(passwordEncoder.encode(userDTO.password()))
-                .firstName(userDTO.firstName())
-                .lastName(userDTO.lastName())
-                .age(userDTO.age())
-                .gender(Gender.valueOf(userDTO.gender().toUpperCase()))
+//                .firstName(userDTO.firstName())
+//                .lastName(userDTO.lastName())
+//                .age(userDTO.age())
+                .gender(Gender.MALE)
                 .role(role)
                 .profession(Roles.USER)
                 .isNonLocked(true)
@@ -94,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         userRepository.save(user);
         ResponseMessage responseMessage = confirmResendCode(user.getEmail(), CodeType.ACCOUNT);
-        return ResponseMessage.builder().success(true).message("Sign Up successfully, "+ responseMessage.getMessage()).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
+        return ResponseMessage.builder().success(true).message("Sign Up successfully, " + responseMessage.getMessage()).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
     }
 
     @Override
@@ -110,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseMessage confirmResendCode(String email , CodeType codeType) {
+    public ResponseMessage confirmResendCode(String email, CodeType codeType) {
         Optional<Code> optionalCode = codeRepository.findByEmailAndType(email, codeType);
         if (optionalCode.isPresent() && optionalCode.get().getExpired().toLocalDateTime().isAfter(LocalDateTime.now())) {
             throw new RuntimeException("Code doesn't expired!");
@@ -181,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
 
     private String generateCode() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 4; i++) {
             sb.append(random.nextInt(0, 10));
         }
         return sb.toString();

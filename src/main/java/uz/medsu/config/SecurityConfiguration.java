@@ -41,14 +41,12 @@ public class SecurityConfiguration {
                 .authorizeRequests()
                 .requestMatchers(Util.openUrl)
                 .permitAll()
-                .requestMatchers(new String[]{"/admin/**", "/drug/**", "/user/**", "/doctor/**", "/article/**"})
+                .requestMatchers(new String[]{"/admin/**"})
                 .hasRole("ADMIN")
-                .requestMatchers("/user/**")
+                .requestMatchers(new String[]{"/doctor/**"})
+                .hasAnyRole("DOCTOR", "ADMIN")
+                .requestMatchers(new String[]{"/user/**", "/article/**", "/drug/**", "/order/**", "/image/**"})
                 .hasAnyRole("USER", "ADMIN", "DOCTOR")
-                .requestMatchers(new String[]{"/doctor/**", "/article/**"})
-                .hasRole("DOCTOR")
-                .requestMatchers("/image/**")
-                .hasAnyRole("ADMIN", "USER", "DOCTOR")
                 .anyRequest()
                 .authenticated();
         return http.build();

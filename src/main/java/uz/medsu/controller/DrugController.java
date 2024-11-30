@@ -16,7 +16,7 @@ import uz.medsu.sevice.serviceImpl.DrugServiceImpl;
 public class DrugController {
     private final DrugService drugService;
 
-    @PreAuthorize("hasAuthority('POST')")
+    @PreAuthorize("{hasAnyRole('ADMIN'), hasAuthority('POST')}")
     @PostMapping
     public ResponseEntity<?> addDrug(@RequestBody DrugDTO drugDTO) {
         return ResponseEntity.ok(drugService.saveDrug(drugDTO));
@@ -34,13 +34,13 @@ public class DrugController {
         return ResponseEntity.ok(drugService.getById(id));
     }
 
-    @PreAuthorize("hasAuthority('EDIT')")
+    @PreAuthorize("{hasAnyRole('ADMIN'), hasAuthority('EDIT')}")
     @PutMapping("/{id}")
     public ResponseEntity<?> editDrug(@PathVariable Long id,  @RequestBody DrugDTO drugDTO) {
         return ResponseEntity.ok(drugService.editDrug(id,drugDTO));
     }
 
-    @PreAuthorize("hasAuthority('DELETE')")
+    @PreAuthorize("{hasAnyRole('ADMIN'), hasAuthority('DELETE')}")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDrug(@PathVariable Long id) {
         return ResponseEntity.ok(drugService.deleteDrug(id));

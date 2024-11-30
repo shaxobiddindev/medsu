@@ -43,7 +43,7 @@ public class MyEventListener {
     @EventListener
     @Async
     public void onOrderCreated(OrderCreatedEvent event) {
-        LocalDateTime cancelTime = LocalDateTime.now().plusHours(24);
+        LocalDateTime cancelTime = LocalDateTime.now().plusMinutes(2);
         Instant instant = cancelTime.atZone(ZoneId.systemDefault()).toInstant();
         scheduler.schedule(() -> orderService.cancelOrder(event.getOrder().getId(), true), instant);
     }
@@ -51,7 +51,7 @@ public class MyEventListener {
     @EventListener
     @Async
     public void onAppointmentCancel(AppointmentCreatEvent event) {
-        LocalDateTime cancelTime = LocalDateTime.now().plusHours(48);
+        LocalDateTime cancelTime = LocalDateTime.now().plusMinutes(2);
         Instant instant = cancelTime.atZone(ZoneId.systemDefault()).toInstant();
         scheduler.schedule(() -> userService.autoCancelAppointment(event.getAppointment().getId()), instant);
     }

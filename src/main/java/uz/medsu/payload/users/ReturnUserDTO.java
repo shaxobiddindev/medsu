@@ -6,6 +6,7 @@ public record ReturnUserDTO(
         Long id,
         String fistName,
         String lastName,
+        String username,
         String email,
         Integer age,
         String gender,

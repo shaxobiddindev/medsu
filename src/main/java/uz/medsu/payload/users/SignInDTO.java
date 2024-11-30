@@ -1,4 +1,4 @@
 package uz.medsu.payload.users;
 
-public record SignInDTO(String email, String password) {
+public record SignInDTO(String username, String password) {
 }

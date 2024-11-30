@@ -26,11 +26,12 @@ public class InitParams implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (mode.equals("always") && userRepository.findAll().isEmpty()) {
-            for (Authorities value : Authorities.values()) {
-                Authority authority = new Authority();
-                authority.setAuthorities(value);
-                authorityRepository.save(authority);
-            }
+            if (authorityRepository.findAll().isEmpty())
+                for (Authorities value : Authorities.values()) {
+                    Authority authority = new Authority();
+                    authority.setAuthorities(value);
+                    authorityRepository.save(authority);
+                }
 
             Role superAdmin = new Role();
             superAdmin.setName(Roles.ADMIN);

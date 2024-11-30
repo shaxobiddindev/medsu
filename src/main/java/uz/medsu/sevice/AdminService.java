@@ -1,6 +1,7 @@
 package uz.medsu.sevice;
 
 import uz.medsu.payload.SetDoctorDTO;
+import uz.medsu.payload.users.UserDTO;
 import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.utils.ResponseMessage;
 
@@ -16,4 +17,8 @@ public interface AdminService {
     ResponseMessage blockUser(Long id);
     ResponseMessage unblockUser(Long id);
     ResponseMessage enableUser(Long id);
+
+    ResponseMessage addUser(UserDTO userDTO);
+
+    ResponseMessage deleteUser(Long id);
 }

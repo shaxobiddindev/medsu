@@ -16,19 +16,19 @@ import uz.medsu.utils.ResponseMessage;
 public class ArticleController {
     private final ArticleService articleService;
 
-    @PreAuthorize("{hasRole('DOCTOR'), hasAuthority('POST')}")
+    @PreAuthorize("{hasAnyRole('DOCTOR', 'ADMIN'), hasAuthority('POST')}")
     @PostMapping
     public ResponseEntity<ResponseMessage> addArticle(@RequestBody ArticleDTO article) {
         return ResponseEntity.ok(articleService.addArticle(article));
     }
 
-    @PreAuthorize("{hasRole('DOCTOR'), hasAuthority('EDIT')}")
+    @PreAuthorize("{hasAnyRole('DOCTOR', 'ADMIN'), hasAuthority('EDIT')}")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseMessage> updateArticle(@PathVariable Long id, @RequestBody ArticleDTO article) {
         return ResponseEntity.ok(articleService.updateArticle(id, article));
     }
 
-    @PreAuthorize("{hasRole('DOCTOR'), hasAuthority('DELETE')}")
+    @PreAuthorize("{hasAnyRole('DOCTOR', 'ADMIN'), hasAuthority('DELETE')}")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseMessage> deleteArticle(@PathVariable Long id) {
         return ResponseEntity.ok(articleService.deleteArticle(id));
@@ -46,7 +46,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.articlesMy(page, size));
     }
 
-    @PreAuthorize("{hasRole('DOCTOR'), hasAuthority('READ')}")
+    @PreAuthorize("{hasAuthority('READ')}")
     @GetMapping("/top")
     public ResponseEntity<ResponseMessage> getTopArticles(Integer page, Integer size) {
         return ResponseEntity.ok(articleService.articlesTop(page, size));

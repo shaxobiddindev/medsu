@@ -15,15 +15,9 @@ import uz.medsu.event.SendEmailEvent;
 import uz.medsu.payload.EmailMessage;
 import uz.medsu.payload.appointment.AppointmentDTO;
 import uz.medsu.payload.appointment.ResponseAppointmentDTO;
-import uz.medsu.payload.cards.CardDTO;
-import uz.medsu.payload.cards.PaymentDTO;
-import uz.medsu.payload.cards.ResponseCardDTO;
-import uz.medsu.payload.cards.ResponseInvoiceDTO;
+import uz.medsu.payload.cards.*;
 import uz.medsu.payload.doctors.ResponseDoctorDTO;
-import uz.medsu.payload.users.EditPasswordDTO;
-import uz.medsu.payload.users.EditUserDTO;
-import uz.medsu.payload.users.ReturnUserDTO;
-import uz.medsu.payload.users.UserDTO;
+import uz.medsu.payload.users.*;
 import uz.medsu.repository.*;
 import uz.medsu.sevice.UserService;
 import uz.medsu.utils.I18nUtil;
@@ -52,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final RatingRepository ratingRepository;
     private final SpecialityRepository doctorRepository;
     private final OrderRepository orderRepository;
+    private final LocationRepository locationRepository;
     private final ApplicationEventPublisher eventPublisher;
     @Value("${my_var.start-time}")
     private String startTime;
@@ -72,7 +67,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("passwordChanged"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(),user.getUsername(),  user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 
@@ -89,7 +84,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("userChangedSuccess"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(),user.getUsername(),  user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 
@@ -191,7 +186,6 @@ public class UserServiceImpl implements UserService {
         cardRepository.save(card);
 
 
-
         return ResponseMessage
                 .builder()
                 .success(true)
@@ -229,7 +223,7 @@ public class UserServiceImpl implements UserService {
         eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
                 order.getUser().getEmail(),
                 I18nUtil.getMessage("paymentSuccess", order.getUser()),
-                 "Your order successfully approved!"+ "\n\n\n" +
+                "Your order successfully approved!" + "\n\n\n" +
                         "Order ID: " + order.getId() + "\n" +
                         "Total price: " + order.getTotalPrice() + "$\n" +
                         "Order status: " + order.getStatus() + "\n" +
@@ -248,9 +242,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseMessage topUpCard(TopUpCardDTO cardDTO) {
+        Card card = cardRepository.findByNumber(cardDTO.cardNumber()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
+        card.setBalance(card.getBalance() + cardDTO.amount() > 0 ? cardDTO.amount() : 0);
+        return ResponseMessage.builder().success(true).message("Your balance has been topped up!").build();
+    }
+
+    @Override
     public ResponseMessage getInvoice(Long id) {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("invoiceNotFound")));
-        if (!invoice.getFrom().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException(I18nUtil.getMessage("invoiceNotFound"));
+        if (!invoice.getFrom().getId().equals(Util.getCurrentUser().getId()))
+            throw new RuntimeException(I18nUtil.getMessage("invoiceNotFound"));
         return ResponseMessage.builder().success(true).data(
                 new ResponseInvoiceDTO(
                         invoice.getId(),
@@ -265,7 +267,54 @@ public class UserServiceImpl implements UserService {
                         invoice.getUpdatedAt().toLocalDateTime().toString()
                 )
         ).build();
-     }
+    }
+
+    @Override
+    public ResponseMessage setLocation(LocationDTO locationDTO) {
+        Location location = locationRepository.findByUser(Util.getCurrentUser()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("locationNotFound")));
+        location.setLongitude(locationDTO.longitude());
+        location.setLatitude(locationDTO.latitude());
+        locationRepository.save(location);
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("locationUpdated")).build();
+    }
+
+    @Override
+    public ResponseMessage getLocation() {
+        Location location = locationRepository.findByUser(Util.getCurrentUser()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("locationNotFound")));
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .data(
+                        new LocationDTO(
+                                location.getLatitude(),
+                                location.getLongitude()
+                        )
+                )
+                .build();
+    }
+
+    @Override
+    public ResponseMessage profile() {
+        User currentUser = Util.getCurrentUser();
+        return ResponseMessage
+                .builder()
+                .data(
+                        new ReturnUserDTO(
+                                currentUser.getId(),
+                                currentUser.getFirstName(),
+                                currentUser.getLastName(),
+                                currentUser.getUsername(),
+                                currentUser.getEmail(),
+                                currentUser.getAge(),
+                                currentUser.getGender().toString(),
+                                currentUser.getRole(),
+                                currentUser.getEnabled(),
+                                currentUser.getIsNonLocked(),
+                                currentUser.getImageUrl()
+                        )
+                )
+                .build();
+    }
 
     @Override
     public ResponseMessage payToInvoiceForAppointment(Long id, PaymentDTO paymentDTO) {
@@ -288,7 +337,7 @@ public class UserServiceImpl implements UserService {
         eventPublisher.publishEvent(new SendEmailEvent(new EmailMessage(
                 appointment.getUser().getEmail(),
                 I18nUtil.getMessage("paymentSuccess", appointment.getUser()),
-                "Your appointment successfully approved!"+ "\n\n\n" +
+                "Your appointment successfully approved!" + "\n\n\n" +
                         "Appointment ID: " + appointment.getId() + "\n" +
                         "Total price: " + appointment.getDoctor().getAppointmentPrice() + "$\n" +
                         "Appointment status: " + appointment.getStatus() + "\n" +
@@ -385,10 +434,10 @@ public class UserServiceImpl implements UserService {
 
         Optional<Appointment> byDateAndTime = appointmentRepository.findByDateAndTime(appointment.getDate(), appointment.getTime());
 
-        if (byDateAndTime.isPresent()){
+        if (byDateAndTime.isPresent()) {
             Appointment existAppointment = byDateAndTime.get();
             if (existAppointment.getStatus().equals(AppointmentStatus.UNPAID)
-            || existAppointment.getStatus().equals(AppointmentStatus.APPROVED))
+                    || existAppointment.getStatus().equals(AppointmentStatus.APPROVED))
                 throw new RuntimeException(I18nUtil.getMessage("dateTimeExists"));
         }
         Invoice invoice = Invoice
@@ -437,11 +486,11 @@ public class UserServiceImpl implements UserService {
         Invoice invoice = appointment.getInvoice();
         invoice.setStatus(PaymentStatus.CANCELLED);
 
-        if (invoice.getAmount()>0) {
+        if (invoice.getAmount() > 0) {
             Card to = cardRepository.findByNumber("9860120105531434").orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
             Card from = cardRepository.findByNumber(invoice.getFromCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
-            to.setBalance(to.getBalance()-invoice.getAmount());
-            from.setBalance(from.getBalance()+invoice.getAmount());
+            to.setBalance(to.getBalance() - invoice.getAmount());
+            from.setBalance(from.getBalance() + invoice.getAmount());
             cardRepository.save(to);
             cardRepository.save(from);
         }
@@ -469,16 +518,17 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public ResponseMessage autoCancelAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
-        if (appointment.getStatus().equals(AppointmentStatus.APPROVED)) throw new RuntimeException("Appointment approved, cannot cancel!");
+        if (appointment.getStatus().equals(AppointmentStatus.APPROVED))
+            throw new RuntimeException("Appointment approved, cannot cancel!");
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepository.save(appointment);
         Invoice invoice = appointment.getInvoice();
         invoice.setStatus(PaymentStatus.CANCELLED);
-        if (invoice.getAmount()>0) {
+        if (invoice.getAmount() > 0) {
             Card to = cardRepository.findByNumber("9860120105531434").orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
             Card from = cardRepository.findByNumber(invoice.getFromCard()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
-            to.setBalance(to.getBalance()-invoice.getAmount());
-            from.setBalance(from.getBalance()+invoice.getAmount());
+            to.setBalance(to.getBalance() - invoice.getAmount());
+            from.setBalance(from.getBalance() + invoice.getAmount());
             cardRepository.save(to);
             cardRepository.save(from);
         }

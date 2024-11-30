@@ -5,8 +5,10 @@ import uz.medsu.entity.Doctor;
 import uz.medsu.payload.appointment.AppointmentDTO;
 import uz.medsu.payload.cards.CardDTO;
 import uz.medsu.payload.cards.PaymentDTO;
+import uz.medsu.payload.cards.TopUpCardDTO;
 import uz.medsu.payload.users.EditPasswordDTO;
 import uz.medsu.payload.users.EditUserDTO;
+import uz.medsu.payload.users.LocationDTO;
 import uz.medsu.payload.users.UserDTO;
 import uz.medsu.utils.ResponseMessage;
 
@@ -27,6 +29,10 @@ public interface UserService {
     ResponseMessage autoCancelAppointment(Long appointmentId);
     ResponseMessage deletePaymentMethod(Long id);
     ResponseMessage payToInvoiceForOrder(Long orderId, PaymentDTO paymentDTO);
-
+    ResponseMessage topUpCard(TopUpCardDTO cardDTO);
     ResponseMessage getInvoice(Long id);
+    ResponseMessage setLocation(LocationDTO locationDTO);
+    ResponseMessage getLocation();
+
+    ResponseMessage profile();
 }
