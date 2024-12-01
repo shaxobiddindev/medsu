@@ -85,4 +85,10 @@ public class AdminController {
     public ResponseEntity<ResponseMessage> enableUser(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.enableUser(id));
     }
+
+    @PreAuthorize(value = "hasAnyAuthority('GET','EDIT','DELETE','READ','POST','SET_DOCTOR', 'BLOCK_USER', 'PERMISSION_CHANGE')")
+    @PostMapping("/doctor/{id}/appointment")
+    public ResponseEntity<ResponseMessage> setRating(@PathVariable Long id , @RequestParam("mark") Double mark) {
+        return ResponseEntity.ok(adminService.setRating(id, mark));
+    }
 }

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import uz.medsu.entity.*;
+import uz.medsu.enums.AppointmentStatus;
 import uz.medsu.enums.Authorities;
 import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
@@ -35,6 +36,9 @@ public class AdminServiceImpl implements AdminService {
     private final AuthorityRepository authorityRepository;
     private final SpecialityRepository specialityRepository;
     private final EmailCheckerService emailCheckerService;
+    private final AppointmentRepository appointmentRepository;
+    private final RatingRepository ratingRepository;
+    private final SpecialityRepository doctorRepository;
     @Value("${my_var.start-time}")
     private String startTime;
     @Value("${my_var.break-time}")
@@ -51,7 +55,8 @@ public class AdminServiceImpl implements AdminService {
     public ResponseMessage setDoctor(SetDoctorDTO doctorDTO) {
         User user = userRepository.findById(doctorDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
         if (user.getProfession().equals(Roles.ADMIN)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
-        if(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired() && !user.getRole().getName().equals(Roles.USER)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
+        if (user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired() && !user.getRole().getName().equals(Roles.USER))
+            throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if (checkAuthorityId(doctorDTO.authoritiesId()))
             throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
 
@@ -64,49 +69,87 @@ public class AdminServiceImpl implements AdminService {
                 .appointmentPrice(doctorDTO.appointmentPrice())
                 .rating(0.0)
                 .build();
-        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
+        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> doctorDTO.authoritiesId().contains(a.getId()) && List.of(Authorities.EDIT,
+                Authorities.POST,
+                Authorities.READ,
+                Authorities.DELETE).contains(a.getAuthorities())).toList());
         specialityRepository.save(speciality);
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("userChangedSuccess")).data(new ReturnUserDTO(user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAge(),
+                user.getGender().name(),
+                user.getRole(),
+                user.getEnabled(),
+                user.getIsNonLocked(),
+                user.getImageUrl())).build();
     }
 
     @Override
     public ResponseMessage setRole(UserRoleEditDTO roleEditDTO) {
         User user = userRepository.findById(roleEditDTO.userId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
         if (user.getProfession().equals(Roles.ADMIN)) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
-        if(!(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired())) throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
+        if (!(user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired()))
+            throw new RuntimeException(I18nUtil.getMessage("userNotFound"));
         if (checkAuthorityId(roleEditDTO.authorityIds()))
             throw new RuntimeException(I18nUtil.getMessage("authorityIdIncorrect"));
 
         user.getRole().setName(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
         user.setProfession(Roles.valueOf(roleEditDTO.roleName().toUpperCase()));
-        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT, Authorities.POST, Authorities.READ, Authorities.DELETE).contains(a.getAuthorities())).toList());
+        user.getRole().setAuthorities(authorityRepository.findAll().stream().filter(a -> roleEditDTO.authorityIds().contains(a.getId()) && List.of(Authorities.EDIT,
+                Authorities.POST,
+                Authorities.READ,
+                Authorities.DELETE).contains(a.getAuthorities())).toList());
         userRepository.save(user);
-        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().name(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
+        return ResponseMessage.builder().success(true).data(new ReturnUserDTO(user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAge(),
+                user.getGender().name(),
+                user.getRole(),
+                user.getEnabled(),
+                user.getIsNonLocked(),
+                user.getImageUrl())).build();
     }
 
     @Override
-    public ResponseMessage getDoctor(Integer page, Integer size) {
-        List<User> doctors = userRepository.findAllByProfession(Roles.DOCTOR, PageRequest.of(page, size)).stream().toList();
+    public ResponseMessage getDoctor(Integer page,
+                                     Integer size) {
+        List<User> doctors = userRepository.findAllByProfession(Roles.DOCTOR,
+                PageRequest.of(page,
+                        size)).stream().toList();
 
         return ResponseMessage.builder().success(true).data(usersReturn(doctors)).build();
     }
 
     @Override
-    public ResponseMessage getAllUsers(Integer page, Integer size) {
-        List<User> users = userRepository.findAll(PageRequest.of(page, size)).stream().toList();
+    public ResponseMessage getAllUsers(Integer page,
+                                       Integer size) {
+        List<User> users = userRepository.findAll(PageRequest.of(page,
+                size)).stream().toList();
         return ResponseMessage.builder().success(true).data(usersReturn(users)).build();
     }
 
     @Override
-    public ResponseMessage getAdmins(Integer page, Integer size) {
-        List<User> admins = userRepository.findAllByProfession(Roles.ADMIN, PageRequest.of(page, size)).stream().toList();
+    public ResponseMessage getAdmins(Integer page,
+                                     Integer size) {
+        List<User> admins = userRepository.findAllByProfession(Roles.ADMIN,
+                PageRequest.of(page,
+                        size)).stream().toList();
         return ResponseMessage.builder().success(true).data(usersReturn(admins)).build();
     }
 
     @Override
-    public ResponseMessage getUsers(Integer page, Integer size) {
-        List<User> users = userRepository.findAllByProfession(Roles.USER, PageRequest.of(page, size)).stream().toList();
+    public ResponseMessage getUsers(Integer page,
+                                    Integer size) {
+        List<User> users = userRepository.findAllByProfession(Roles.USER,
+                PageRequest.of(page,
+                        size)).stream().toList();
         return ResponseMessage.builder().success(true).data(usersReturn(users)).build();
     }
 
@@ -138,8 +181,6 @@ public class AdminServiceImpl implements AdminService {
     public ResponseMessage addUser(UserDTO userDTO) {
         if (userRepository.existsByUsername(userDTO.username()))
             throw new RuntimeException("Username already exists!");
-        if (emailCheckerService.isValidEmailFormat(userDTO.email()) || emailCheckerService.isValidEmailAddress(userDTO.email()))
-            throw new RuntimeException("Invalid email address!");
         if (userRepository.existsByEmail(userDTO.email()))
             throw new RuntimeException("Email already exists");
         User user = User
@@ -147,7 +188,25 @@ public class AdminServiceImpl implements AdminService {
                 .email(userDTO.email())
                 .password(userDTO.password())
                 .build();
-        return null;
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .data(
+                        new ReturnUserDTO(
+                                user.getId(),
+                                user.getFirstName(),
+                                user.getLastName(),
+                                user.getUsername(),
+                                user.getEmail(),
+                                user.getAge(),
+                                user.getGender().name(),
+                                user.getRole(),
+                                user.getEnabled(),
+                                user.getIsNonLocked(),
+                                user.getImageUrl()
+                        )
+                )
+                .build();
     }
 
     @Override
@@ -157,6 +216,24 @@ public class AdminServiceImpl implements AdminService {
         userRepository.deleteById(id);
         roleRepository.delete(role);
         return ResponseMessage.builder().success(true).message("User deleted! ID: " + id).build();
+    }
+
+    @Override
+    public ResponseMessage setRating(Long id, Double mark) {
+        Appointment appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        if (!appointment.getStatus().equals(AppointmentStatus.COMPLETED)) throw new RuntimeException("Appointment is not completed");
+        Rating rating = Rating
+                .builder()
+                .appointmentId(appointment.getId())
+                .rating(mark)
+                .doctorId(appointment.getDoctor().getId())
+                .userId(appointment.getUser().getId())
+                .build();
+        ratingRepository.save(rating);
+        Doctor doctor = doctorRepository.findById(appointment.getDoctor().getId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
+        doctor.setRating(ratingRepository.sumRatingByDoctorId(doctor.getId()));
+        doctorRepository.save(doctor);
+        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("appointmentRateSuccess")).build();
     }
 
     private List<ReturnUserDTO> usersReturn(List<User> users) {

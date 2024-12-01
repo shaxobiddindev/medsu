@@ -21,4 +21,6 @@ public interface AdminService {
     ResponseMessage addUser(UserDTO userDTO);
 
     ResponseMessage deleteUser(Long id);
+
+    ResponseMessage setRating(Long id, Double mark);
 }

@@ -3,6 +3,7 @@ package uz.medsu.sevice;
 
 import uz.medsu.entity.Doctor;
 import uz.medsu.payload.appointment.AppointmentDTO;
+import uz.medsu.payload.appointment.FreeTimeDTO;
 import uz.medsu.payload.cards.CardDTO;
 import uz.medsu.payload.cards.PaymentDTO;
 import uz.medsu.payload.cards.TopUpCardDTO;
@@ -35,4 +36,6 @@ public interface UserService {
     ResponseMessage getLocation();
 
     ResponseMessage profile();
+
+    ResponseMessage getFreeTime(FreeTimeDTO freeTimeDTO);
 }

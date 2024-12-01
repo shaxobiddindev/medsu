@@ -13,10 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
-    Optional<Appointment> findByDateAndTime(Timestamp date, String time);
+    List<Appointment> findAllByDateAndTime(Timestamp date, String time);
 
     Page<Appointment> findAllByUser(User user, PageRequest pageRequest);
     Page<Appointment> findAllByDoctor(Doctor doctor, PageRequest pageRequest);
+    List<Appointment> findAllByDoctorAndDate(Doctor doctor, Timestamp date);
 
     Optional<Appointment> findByInvoice(Invoice invoice);
 }

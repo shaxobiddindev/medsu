@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.medsu.payload.appointment.AppointmentDTO;
+import uz.medsu.payload.appointment.FreeTimeDTO;
 import uz.medsu.payload.cards.CardDTO;
 import uz.medsu.payload.cards.PaymentDTO;
 import uz.medsu.payload.cards.TopUpCardDTO;
@@ -61,6 +62,12 @@ public class UserController {
     @GetMapping("/appointment")
     public ResponseEntity<ResponseMessage> getAppointments(Integer page, Integer size) {
         return ResponseEntity.ok(userService.showAppointments(page, size));
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
+    @PostMapping("/appointment/free-time")
+    public ResponseEntity<ResponseMessage> getAppointments(@RequestBody FreeTimeDTO freeTimeDTO) {
+        return ResponseEntity.ok(userService.getFreeTime(freeTimeDTO));
     }
 
     @PreAuthorize("hasAuthority('READ')")

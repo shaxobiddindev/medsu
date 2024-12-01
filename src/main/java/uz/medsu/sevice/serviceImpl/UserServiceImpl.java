@@ -13,6 +13,7 @@ import uz.medsu.event.AppointmentCreatEvent;
 import uz.medsu.event.SendEmailEvent;
 import uz.medsu.payload.EmailMessage;
 import uz.medsu.payload.appointment.AppointmentDTO;
+import uz.medsu.payload.appointment.FreeTimeDTO;
 import uz.medsu.payload.appointment.ResponseAppointmentDTO;
 import uz.medsu.payload.cards.*;
 import uz.medsu.payload.doctors.ResponseDoctorDTO;
@@ -29,6 +30,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -257,19 +260,19 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .data(
-                new ResponseInvoiceDTO(
-                        invoice.getId(),
-                        invoice.getTitle(),
-                        invoice.getDescription(),
-                        invoice.getTo().getId(),
-                        invoice.getFrom().getId(),
-                        invoice.getPrice(),
-                        invoice.getAmount(),
-                        invoice.getStatus().toString(),
-                        invoice.getCreatedAt().toLocalDateTime().toString(),
-                        invoice.getUpdatedAt().toLocalDateTime().toString()
-                )
-        ).build();
+                        new ResponseInvoiceDTO(
+                                invoice.getId(),
+                                invoice.getTitle(),
+                                invoice.getDescription(),
+                                invoice.getTo().getId(),
+                                invoice.getFrom().getId(),
+                                invoice.getPrice(),
+                                invoice.getAmount(),
+                                invoice.getStatus().toString(),
+                                invoice.getCreatedAt().toLocalDateTime().toString(),
+                                invoice.getUpdatedAt().toLocalDateTime().toString()
+                        )
+                ).build();
     }
 
     @Override
@@ -278,11 +281,11 @@ public class UserServiceImpl implements UserService {
         Location location;
         location = optionalLocation
                 .orElseGet(() ->
-                Location
-                        .builder()
-                        .user(Util.getCurrentUser())
-                        .build()
-        );
+                        Location
+                                .builder()
+                                .user(Util.getCurrentUser())
+                                .build()
+                );
         location.setLongitude(locationDTO.longitude());
         location.setLatitude(locationDTO.latitude());
         locationRepository.save(location);
@@ -330,6 +333,27 @@ public class UserServiceImpl implements UserService {
                         )
                 )
                 .build();
+    }
+
+    @Override
+    public ResponseMessage getFreeTime(FreeTimeDTO freeTimeDTO) {
+        Doctor doctor = doctorRepository.findById(freeTimeDTO.doctorId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
+        List<Appointment> appointments = appointmentRepository.findAllByDoctorAndDate(doctor, checkDate(freeTimeDTO.date()).orElseThrow());
+        List<String> freeTimes = allTimes();
+        for (Appointment appointment : appointments) {
+            freeTimes.remove(appointment.getTime());
+        }
+        return ResponseMessage.builder().success(true).data(freeTimes).build();
+    }
+
+    private List<String> allTimes() {
+        List<String> freeTimes = new ArrayList<>();
+        freeTimes.add(startTime);
+        for (int i = 10; i < 19; i++) {
+            if (breakTime.equals((i + ":00"))) continue;
+            freeTimes.add(i + ":00");
+        }
+        return freeTimes;
     }
 
     @Override
@@ -448,14 +472,13 @@ public class UserServiceImpl implements UserService {
                 .status(AppointmentStatus.UNPAID)
                 .build();
 
-        Optional<Appointment> byDateAndTime = appointmentRepository.findByDateAndTime(appointment.getDate(), appointment.getTime());
+        List<Appointment> byDateAndTimes = appointmentRepository.findAllByDateAndTime(appointment.getDate(), appointment.getTime()).stream().filter(cons ->
+                cons.getStatus().equals(AppointmentStatus.APPROVED) || cons.getStatus().equals(AppointmentStatus.UNPAID)
+        ).toList();
 
-        if (byDateAndTime.isPresent()) {
-            Appointment existAppointment = byDateAndTime.get();
-            if (existAppointment.getStatus().equals(AppointmentStatus.UNPAID)
-                    || existAppointment.getStatus().equals(AppointmentStatus.APPROVED))
-                throw new RuntimeException(I18nUtil.getMessage("dateTimeExists"));
-        }
+        if (!byDateAndTimes.isEmpty())
+            throw new RuntimeException(I18nUtil.getMessage("dateTimeExists"));
+
         Invoice invoice = Invoice
                 .builder()
                 .price(appointment.getDoctor().getAppointmentPrice())
