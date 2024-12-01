@@ -1,6 +1,5 @@
 package uz.medsu.sevice.serviceImpl;
 
-import io.swagger.v3.oas.annotations.servers.Server;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,8 +31,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-
-import static org.springframework.util.ClassUtils.isPresent;
 
 @Service
 @RequiredArgsConstructor
@@ -67,7 +64,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("passwordChanged"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(),user.getUsername(),  user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 
@@ -84,7 +81,7 @@ public class UserServiceImpl implements UserService {
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("userChangedSuccess"))
-                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(),user.getUsername(),  user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
+                .data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl()))
                 .build();
     }
 
@@ -245,7 +242,10 @@ public class UserServiceImpl implements UserService {
     public ResponseMessage topUpCard(TopUpCardDTO cardDTO) {
         Card card = cardRepository.findByNumber(cardDTO.cardNumber()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("cardNotFound")));
         card.setBalance(card.getBalance() + cardDTO.amount() > 0 ? cardDTO.amount() : 0);
-        return ResponseMessage.builder().success(true).message("Your balance has been topped up!").build();
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .message("Your balance has been topped up!").build();
     }
 
     @Override
@@ -253,7 +253,10 @@ public class UserServiceImpl implements UserService {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("invoiceNotFound")));
         if (!invoice.getFrom().getId().equals(Util.getCurrentUser().getId()))
             throw new RuntimeException(I18nUtil.getMessage("invoiceNotFound"));
-        return ResponseMessage.builder().success(true).data(
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .data(
                 new ResponseInvoiceDTO(
                         invoice.getId(),
                         invoice.getTitle(),
@@ -271,11 +274,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseMessage setLocation(LocationDTO locationDTO) {
-        Location location = locationRepository.findByUser(Util.getCurrentUser()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("locationNotFound")));
+        Optional<Location> optionalLocation = locationRepository.findByUser(Util.getCurrentUser());
+        Location location;
+        location = optionalLocation
+                .orElseGet(() ->
+                Location
+                        .builder()
+                        .user(Util.getCurrentUser())
+                        .build()
+        );
         location.setLongitude(locationDTO.longitude());
         location.setLatitude(locationDTO.latitude());
         locationRepository.save(location);
-        return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("locationUpdated")).build();
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .message(I18nUtil.getMessage("locationUpdated"))
+                .build();
     }
 
     @Override
@@ -298,6 +313,7 @@ public class UserServiceImpl implements UserService {
         User currentUser = Util.getCurrentUser();
         return ResponseMessage
                 .builder()
+                .success(true)
                 .data(
                         new ReturnUserDTO(
                                 currentUser.getId(),

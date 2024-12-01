@@ -28,13 +28,13 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('EDIT')")
-    @PutMapping
+    @PutMapping("/profile")
     public ResponseEntity<ResponseMessage> updateUser(@RequestBody EditUserDTO userDTO) {
         return ResponseEntity.ok(userService.editUser(userDTO));
     }
 
     @PreAuthorize("hasAuthority('READ')")
-    @GetMapping
+    @GetMapping("/profile")
     public ResponseEntity<ResponseMessage> profile() {
         return ResponseEntity.ok(userService.profile());
     }

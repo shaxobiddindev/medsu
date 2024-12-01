@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
 //        if (!user.getPassword().equals(userDTO.password())) {
 //            throw new RuntimeException("Wrong password");
 //        }
-        String token = jwtProvider.generateToken(user);
+        String token = jwtProvider.generateToken(userDTO.username());
 
 //        byte[] encode = Base64.getEncoder().encode((user.getUsername() + ":" + user.getPassword()).getBytes());
         return ResponseMessage.builder().success(true).message("Login successfully!").data(token).build();

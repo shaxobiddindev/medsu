@@ -18,17 +18,18 @@ public class JwtProvider {
     Long expireTime;
 
 
-    public String generateToken(UserDetails userDetails) {
-        Date date = new Date(System.currentTimeMillis()+expireTime);
-        return Jwts
-                .builder()
-                .setIssuedAt(new Date())
-                .setSubject(userDetails.getUsername())
-                .signWith(signKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
+//    public String generateToken(UserDetails userDetails) {
+//        Date date = new Date(System.currentTimeMillis()+expireTime);
+//        return Jwts
+//                .builder()
+//                .setIssuedAt(new Date())
+//                .setSubject(userDetails.getUsername())
+//                .signWith(signKey(), SignatureAlgorithm.HS256)
+//                .compact();
+//    }
 
     public String generateToken(String subject) {
+        Date date = new Date(System.currentTimeMillis()+expireTime);
         return Jwts
                 .builder()
                 .setIssuedAt(new Date())
