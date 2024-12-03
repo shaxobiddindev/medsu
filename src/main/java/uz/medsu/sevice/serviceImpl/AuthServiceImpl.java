@@ -161,9 +161,10 @@ public class AuthServiceImpl implements AuthService {
         StringBuilder sb = new StringBuilder();
         String key = sb
                 .append(user.getEmail())
-                .append(":")
-                .append(LocalDateTime.now().plusHours(5))
+                .append("/")
+                .append(LocalDateTime.now().plusMinutes(5))
                 .toString();
+        System.out.println(key);
         String token = jwtProvider.generateToken(Base64.getEncoder().encodeToString(key.getBytes()));
         PasswordKey passwordKey = new PasswordKey();
         passwordKey.setKey(key);
@@ -173,8 +174,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseMessage forgotPassword(ForgotPasswordDTO passwordDTO) {
-        String subject = Arrays.toString(Base64.getDecoder().decode(jwtProvider.getSubject(passwordDTO.token())));
-        String[] split = subject.split(":");
+        String subject = new String(Base64.getDecoder().decode(jwtProvider.getSubject(passwordDTO.token())));
+        String[] split = subject.split("/");
+        System.out.println(subject);
+        System.out.println(split[1]);
         LocalDateTime expire = LocalDateTime.parse(split[1]);
         if (expire.isBefore(LocalDateTime.now())) throw new RuntimeException("Token expired!");
         PasswordKey passwordKey = passwordKeyRepository.findByKey(subject).orElseThrow(() -> new RuntimeException("Invalid token!"));
