@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseMessage signUp(UserDTO userDTO) {
-        if (emailCheckerService.isValidEmailFormat(userDTO.email()) || emailCheckerService.isValidEmailAddress(userDTO.email()))
+        if (!emailCheckerService.isValidEmailFormat(userDTO.email()) || !emailCheckerService.isValidEmailAddress(userDTO.email()))
             throw new RuntimeException("Invalid email address!");
         if (userRepository.existsByUsername(userDTO.username()))
             throw new RuntimeException("Username already exists!");
