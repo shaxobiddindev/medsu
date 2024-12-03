@@ -15,6 +15,21 @@ spring:
   sql:
     init:
       mode: always
+#  spring:
+#    security:
+#      oauth2:
+#        client:
+#          registration:
+#            google:
+#              client-id: YOUR_CLIENT_ID
+#              client-secret: YOUR_CLIENT_SECRET
+#              scope: profile, email
+#          provider:
+#            google:
+#              authorization-uri: https://accounts.google.com/o/oauth2/auth
+#              token-uri: https://oauth2.googleapis.com/token
+#              user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+
 my_token:
   key: ShaxobiddinUralovJavaBackendDeveloper
   expire_pass_time: 300000

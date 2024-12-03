@@ -9,6 +9,7 @@ import uz.medsu.enums.AppointmentStatus;
 import uz.medsu.enums.Authorities;
 import uz.medsu.enums.DoctorSpeciality;
 import uz.medsu.enums.Roles;
+import uz.medsu.payload.users.LocationDTO;
 import uz.medsu.payload.users.ReturnUserDTO;
 import uz.medsu.payload.SetDoctorDTO;
 import uz.medsu.payload.users.UserDTO;
@@ -17,6 +18,7 @@ import uz.medsu.repository.*;
 import uz.medsu.sevice.AdminService;
 import uz.medsu.utils.I18nUtil;
 import uz.medsu.utils.ResponseMessage;
+import uz.medsu.utils.Util;
 
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
@@ -39,6 +41,7 @@ public class AdminServiceImpl implements AdminService {
     private final AppointmentRepository appointmentRepository;
     private final RatingRepository ratingRepository;
     private final SpecialityRepository doctorRepository;
+    private final LocationRepository locationRepository;
     @Value("${my_var.start-time}")
     private String startTime;
     @Value("${my_var.break-time}")
@@ -234,6 +237,42 @@ public class AdminServiceImpl implements AdminService {
         doctor.setRating(ratingRepository.sumRatingByDoctorId(doctor.getId()));
         doctorRepository.save(doctor);
         return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("appointmentRateSuccess")).build();
+    }
+
+    @Override
+    public ResponseMessage setLocation(Long userId, LocationDTO locationDTO) {
+        Optional<Location> optionalLocation = locationRepository.findByUser_Id(userId);
+        Location location;
+        location = optionalLocation
+                .orElseGet(() ->
+                        Location
+                                .builder()
+                                .user(userRepository.findById(userId).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound"))))
+                                .build()
+                );
+        location.setLongitude(locationDTO.longitude());
+        location.setLatitude(locationDTO.latitude());
+        locationRepository.save(location);
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .message(I18nUtil.getMessage("locationUpdated"))
+                .build();
+    }
+
+    @Override
+    public ResponseMessage getLocation(Long userId) {
+        Location location = locationRepository.findByUser_Id(userId).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("locationNotFound")));
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .data(
+                        new LocationDTO(
+                                location.getLatitude(),
+                                location.getLongitude()
+                        )
+                )
+                .build();
     }
 
     private List<ReturnUserDTO> usersReturn(List<User> users) {

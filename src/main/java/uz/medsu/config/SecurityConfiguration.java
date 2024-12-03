@@ -49,6 +49,10 @@ public class SecurityConfiguration {
                 .hasAnyRole("USER", "ADMIN", "DOCTOR")
                 .anyRequest()
                 .authenticated();
+//        http.oauth2Login(oauth2Login ->
+//                oauth2Login
+//                        .loginPage("/auth/oauth/authorize")
+//                        .defaultSuccessUrl("/api/user/profile", true));
         return http.build();
     }
 
@@ -56,7 +60,6 @@ public class SecurityConfiguration {
     public UserDetailsService userDetailsService(){
         UserDetailsService userDetailsService =(username)->
                 userRepository.findByUsernameOrEmail(username, username).orElseThrow(() -> new RuntimeException("User not found"));
-
         return userDetailsService;
     }
 }

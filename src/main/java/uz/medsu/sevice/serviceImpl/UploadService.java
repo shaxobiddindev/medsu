@@ -26,7 +26,7 @@ public class UploadService {
 
     public ResponseMessage uploadDrug(MultipartFile file, Long id) {
         Drug drug = drugRepository.findById(id).orElseThrow(()->new RuntimeException(I18nUtil.getMessage("drugNotFound")));
-        if (!Util.getCurrentUser().getProfession().equals(Roles.ADMIN)) throw new RuntimeException("You cannot change it!");
+        if (!Util.getCurrentUser().getRole().getName().equals(Roles.ADMIN) || !Util.getCurrentUser().getProfession().equals(Roles.ADMIN)) throw new RuntimeException("You cannot change it!");
         String url = imageUpload.uploadImage(file);
         drug.setImageUrl(url);
         drugRepository.save(drug);
@@ -34,7 +34,7 @@ public class UploadService {
     }
 
     public ResponseMessage uploadUser(MultipartFile file, Long id) {
-        if (!Util.getCurrentUser().getId().equals(id)) throw new RuntimeException("You cannot change it!");
+        if (!Util.getCurrentUser().getRole().getName().equals(Roles.ADMIN) || !Util.getCurrentUser().getId().equals(id)) throw new RuntimeException("You cannot change it!");
         User user = Util.getCurrentUser();
         String url = imageUpload.uploadImage(file);
         user.setImageUrl(url);
@@ -45,7 +45,7 @@ public class UploadService {
 
     public ResponseMessage uploadArticle(MultipartFile file, Long id) {
         Article article = articleRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("articleNotFound")));
-        if (!article.getAuthor().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException("You cannot change it!");
+        if (!Util.getCurrentUser().getRole().getName().equals(Roles.ADMIN)  || !article.getAuthor().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException("You cannot change it!");
         String url = imageUpload.uploadImage(file);
         article.setImageUrl(url);
         articleRepository.save(article);

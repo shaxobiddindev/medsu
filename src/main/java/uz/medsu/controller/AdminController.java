@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.medsu.payload.SetDoctorDTO;
+import uz.medsu.payload.users.LocationDTO;
 import uz.medsu.payload.users.UserDTO;
 import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.sevice.AdminService;
@@ -74,6 +75,16 @@ public class AdminController {
     @PutMapping("/user/{id}/block")
     public ResponseEntity<ResponseMessage> blockUser(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.blockUser(id));
+    }
+
+    @PutMapping("/user/{id}/location")
+    public ResponseEntity<ResponseMessage> setLocation(@PathVariable Long id, @RequestBody LocationDTO location) {
+        return ResponseEntity.ok(adminService.setLocation(id, location));
+    }
+
+    @GetMapping("/user/{id}/location")
+    public ResponseEntity<ResponseMessage> setLocation(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getLocation(id));
     }
 
     @PutMapping("/user/{id}/unblock")

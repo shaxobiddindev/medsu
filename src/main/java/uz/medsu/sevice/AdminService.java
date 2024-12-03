@@ -1,6 +1,7 @@
 package uz.medsu.sevice;
 
 import uz.medsu.payload.SetDoctorDTO;
+import uz.medsu.payload.users.LocationDTO;
 import uz.medsu.payload.users.UserDTO;
 import uz.medsu.payload.users.UserRoleEditDTO;
 import uz.medsu.utils.ResponseMessage;
@@ -23,4 +24,7 @@ public interface AdminService {
     ResponseMessage deleteUser(Long id);
 
     ResponseMessage setRating(Long id, Double mark);
+
+    ResponseMessage setLocation(Long userId, LocationDTO location);
+    ResponseMessage getLocation(Long userId);
 }
