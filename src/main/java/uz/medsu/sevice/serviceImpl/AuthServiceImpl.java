@@ -182,7 +182,7 @@ public class AuthServiceImpl implements AuthService {
         if (expire.isBefore(LocalDateTime.now())) throw new RuntimeException("Token expired!");
         PasswordKey passwordKey = passwordKeyRepository.findByKey(subject).orElseThrow(() -> new RuntimeException("Invalid token!"));
         User user = userRepository.findByEmail(passwordDTO.email()).orElseThrow(() -> new RuntimeException("User not found!"));
-        user.setPassword(passwordDTO.password());
+        user.setPassword(passwordEncoder.encode(passwordDTO.password()));
         userRepository.save(user);
         passwordKeyRepository.delete(passwordKey);
         return ResponseMessage.builder().success(true).message("Your password has been changed!").build();

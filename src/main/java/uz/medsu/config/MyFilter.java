@@ -45,12 +45,10 @@ public class MyFilter extends OncePerRequestFilter {
                 String[] split = auth.split(":");
                 setAuthenticationToContext(split[0],split[1]);
             }
-            System.out.println(authorization);
-            if (authorization.startsWith("Bearer ")) {
 
+            if (authorization.startsWith("Bearer ")) {
                 authorization = authorization.substring(7);
                 String  username = jwtProvider.getSubject(authorization);
-                System.out.println(username);
                 setAuthenticationToContext(username);
             }
 

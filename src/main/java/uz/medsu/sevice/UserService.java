@@ -37,5 +37,5 @@ public interface UserService {
 
     ResponseMessage profile();
 
-    ResponseMessage getFreeTime(FreeTimeDTO freeTimeDTO);
+    ResponseMessage getFreeTime(Long id);
 }

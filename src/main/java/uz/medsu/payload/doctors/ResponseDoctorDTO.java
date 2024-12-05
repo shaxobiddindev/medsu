@@ -7,5 +7,6 @@ public record ResponseDoctorDTO(
         String lastName,
         String speciality,
         Double price,
-        Double rating
+        Double rating,
+        String imageUrl
 ) {}

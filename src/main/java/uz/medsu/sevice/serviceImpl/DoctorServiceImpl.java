@@ -7,6 +7,7 @@ import uz.medsu.entity.Appointment;
 import uz.medsu.enums.AppointmentStatus;
 import uz.medsu.enums.PaymentStatus;
 import uz.medsu.payload.appointment.ResponseAppointmentDTO;
+import uz.medsu.payload.doctors.ResponseDoctorDTO;
 import uz.medsu.repository.AppointmentRepository;
 import uz.medsu.repository.InvoiceRepository;
 import uz.medsu.repository.SpecialityRepository;
@@ -27,10 +28,20 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public ResponseMessage showAppointments(Integer page, Integer size) {
         List<ResponseAppointmentDTO> appointmentDTOS = appointmentRepository.findAllByDoctor(doctorRepository.findByUser(Util.getCurrentUser()).orElseThrow(()-> new RuntimeException(I18nUtil.getMessage("doctorNotFound"))),PageRequest.of(page, size)).toList().stream().map(appointment -> {
+            ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                    appointment.getDoctor().getId(),
+                    appointment.getDoctor().getAbout(),
+                    appointment.getDoctor().getUser().getFirstName(),
+                    appointment.getDoctor().getUser().getLastName(),
+                    appointment.getDoctor().getDoctorSpecialty().toString(),
+                    appointment.getDoctor().getAppointmentPrice(),
+                    appointment.getDoctor().getRating(),
+                    appointment.getDoctor().getUser().getImageUrl()
+            );
             return new ResponseAppointmentDTO(
                     appointment.getId(),
                     appointment.getUser().getId(),
-                    appointment.getDoctor().getId(),
+                    responseDoctorDTO,
                     appointment.getDate().toLocalDateTime().toLocalDate().toString(),
                     appointment.getTime(),
                     appointment.getStatus().toString(),
@@ -49,13 +60,23 @@ public class DoctorServiceImpl implements DoctorService {
         Appointment appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
         if (!appointment.getDoctor().getId().equals(doctorRepository.findByUser(Util.getCurrentUser()).orElseThrow(()->new RuntimeException(I18nUtil.getMessage("doctorNotFound"))).getId()))
             throw new RuntimeException(I18nUtil.getMessage("appointmentNotFound"));
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
                 .data(new ResponseAppointmentDTO(
                         appointment.getId(),
                         appointment.getUser().getId(),
-                        appointment.getDoctor().getId(),
+                        responseDoctorDTO,
                         appointment.getDate().toLocalDateTime().toLocalDate().toString(),
                         appointment.getTime(),
                         appointment.getStatus().toString(),
@@ -73,10 +94,20 @@ public class DoctorServiceImpl implements DoctorService {
         appointmentRepository.save(appointment);
         appointment.getInvoice().setStatus(PaymentStatus.CANCELLED);
         invoiceRepository.save(appointment.getInvoice());
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
-                .data(new ResponseAppointmentDTO(appointment.getId(),appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
+                .data(new ResponseAppointmentDTO(appointment.getId(),appointment.getUser().getId(), responseDoctorDTO, appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
                 .build();
     }
 
@@ -87,10 +118,20 @@ public class DoctorServiceImpl implements DoctorService {
         if (appointment.getInvoice().getAmount() < appointment.getDoctor().getAppointmentPrice()) throw new RuntimeException(I18nUtil.getMessage("setStatusError"));
         appointment.setStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.save(appointment);
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
-                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
+                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), responseDoctorDTO, appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
                 .build();
     }
 }

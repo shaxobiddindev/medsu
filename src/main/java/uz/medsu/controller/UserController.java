@@ -65,9 +65,9 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('READ')")
-    @PostMapping("/appointment/free-time")
-    public ResponseEntity<ResponseMessage> getAppointments(@RequestBody FreeTimeDTO freeTimeDTO) {
-        return ResponseEntity.ok(userService.getFreeTime(freeTimeDTO));
+    @GetMapping("/{id}/doctor/free-time")
+    public ResponseEntity<ResponseMessage> getAppointments(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getFreeTime(id));
     }
 
     @PreAuthorize("hasAuthority('READ')")

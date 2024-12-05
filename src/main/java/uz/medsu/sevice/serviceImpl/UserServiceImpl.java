@@ -13,6 +13,7 @@ import uz.medsu.event.AppointmentCreatEvent;
 import uz.medsu.event.SendEmailEvent;
 import uz.medsu.payload.EmailMessage;
 import uz.medsu.payload.appointment.AppointmentDTO;
+import uz.medsu.payload.appointment.DateDTO;
 import uz.medsu.payload.appointment.FreeTimeDTO;
 import uz.medsu.payload.appointment.ResponseAppointmentDTO;
 import uz.medsu.payload.cards.*;
@@ -30,10 +31,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -93,13 +91,24 @@ public class UserServiceImpl implements UserService {
         Appointment appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("appointmentNotFound")));
         if (!appointment.getUser().getId().equals(Util.getCurrentUser().getId()))
             throw new RuntimeException(I18nUtil.getMessage("appointmentNotFound"));
+
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
                 .data(new ResponseAppointmentDTO(
                         appointment.getId(),
                         appointment.getUser().getId(),
-                        appointment.getDoctor().getId(),
+                        responseDoctorDTO,
                         appointment.getDate().toLocalDateTime().toLocalDate().toString(),
                         appointment.getTime(),
                         appointment.getStatus().toString(),
@@ -111,10 +120,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseMessage showAppointments(Integer page, Integer size) {
         List<ResponseAppointmentDTO> appointmentDTOS = appointmentRepository.findAllByUser(Util.getCurrentUser(), PageRequest.of(page, size)).toList().stream().map(appointment -> {
+            ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                    appointment.getDoctor().getId(),
+                    appointment.getDoctor().getAbout(),
+                    appointment.getDoctor().getUser().getFirstName(),
+                    appointment.getDoctor().getUser().getLastName(),
+                    appointment.getDoctor().getDoctorSpecialty().toString(),
+                    appointment.getDoctor().getAppointmentPrice(),
+                    appointment.getDoctor().getRating(),
+                    appointment.getDoctor().getUser().getImageUrl()
+            );
             return new ResponseAppointmentDTO(
                     appointment.getId(),
                     appointment.getUser().getId(),
-                    appointment.getDoctor().getId(),
+                    responseDoctorDTO,
                     appointment.getDate().toLocalDateTime().toLocalDate().toString(),
                     appointment.getTime(),
                     appointment.getStatus().toString(),
@@ -336,22 +355,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseMessage getFreeTime(FreeTimeDTO freeTimeDTO) {
-        Doctor doctor = doctorRepository.findById(freeTimeDTO.doctorId()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
-        List<Appointment> appointments = appointmentRepository.findAllByDoctorAndDate(doctor, checkDate(freeTimeDTO.date()).orElseThrow());
-        List<String> freeTimes = allTimes();
-        for (Appointment appointment : appointments) {
-            freeTimes.remove(appointment.getTime());
-        }
+    public ResponseMessage getFreeTime(Long id) {
+        Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
+        Map<DateDTO, List<FreeTimeDTO>> freeTimes = getFreeTimeInDate(doctor, LocalDate.now());
         return ResponseMessage.builder().success(true).data(freeTimes).build();
     }
 
-    private List<String> allTimes() {
-        List<String> freeTimes = new ArrayList<>();
-        freeTimes.add(startTime);
+    private Map<DateDTO, List<FreeTimeDTO>> getFreeTimeInDate(Doctor doctor, LocalDate now) {
+        Map<DateDTO, List<FreeTimeDTO>> result = new HashMap<>();
+        for (int i = 0; i < 30; i++) {
+            LocalDate date = now.plusDays(i);
+            List<Appointment> appointments = appointmentRepository.findAllByDoctorAndDate(doctor, Timestamp.valueOf(LocalDateTime.of(date, LocalTime.of(0, 0))));
+            List<FreeTimeDTO> freeTimes = allTimes();
+            for (FreeTimeDTO freeTime : freeTimes) {
+                for (Appointment appointment : appointments) {
+                    if (freeTime.getTime().equals(appointment.getTime())) {
+                        freeTime.setIsBooked(true);
+                    }
+                }
+            }
+            result.put(new DateDTO(date, date.getDayOfWeek().toString()), freeTimes);
+        }
+
+        return result;
+    }
+
+    private List<FreeTimeDTO> allTimes() {
+        List<FreeTimeDTO> freeTimes = new ArrayList<>();
+        freeTimes.add(new FreeTimeDTO(startTime, false));
         for (int i = 10; i < 19; i++) {
             if (breakTime.equals((i + ":00"))) continue;
-            freeTimes.add(i + ":00");
+            freeTimes.add(new FreeTimeDTO(i + ":00", false));
         }
         return freeTimes;
     }
@@ -406,7 +440,8 @@ public class UserServiceImpl implements UserService {
                     doctor.getUser().getLastName(),
                     doctor.getDoctorSpecialty().toString(),
                     doctor.getAppointmentPrice(),
-                    doctor.getRating()
+                    doctor.getRating(),
+                    doctor.getUser().getImageUrl()
             );
         }).toList();
 
@@ -426,7 +461,8 @@ public class UserServiceImpl implements UserService {
                     doctor.getUser().getLastName(),
                     doctor.getDoctorSpecialty().toString(),
                     doctor.getAppointmentPrice(),
-                    doctor.getRating()
+                    doctor.getRating(),
+                    doctor.getUser().getImageUrl()
             );
         }).toList();
 
@@ -463,6 +499,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseMessage addAppointment(AppointmentDTO appointmentDTO) {
+        Timestamp date = checkDate(appointmentDTO.date()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("dateFormatError")));
+        if (date.toLocalDateTime().isBefore(LocalDateTime.now()))throw new RuntimeException("Only upcoming dates can be booked!");
         Appointment appointment = Appointment
                 .builder()
                 .user(Util.getCurrentUser())
@@ -507,11 +545,21 @@ public class UserServiceImpl implements UserService {
                         "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
                         "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
         )));
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
                 .message(I18nUtil.getMessage("appointmentCreated"))
-                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
+                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), responseDoctorDTO, appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), appointment.getInvoice().getId()))
                 .build();
     }
 
@@ -583,10 +631,20 @@ public class UserServiceImpl implements UserService {
                         "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
                         "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
         )));
+        ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
+                appointment.getDoctor().getId(),
+                appointment.getDoctor().getAbout(),
+                appointment.getDoctor().getUser().getFirstName(),
+                appointment.getDoctor().getUser().getLastName(),
+                appointment.getDoctor().getDoctorSpecialty().toString(),
+                appointment.getDoctor().getAppointmentPrice(),
+                appointment.getDoctor().getRating(),
+                appointment.getDoctor().getUser().getImageUrl()
+        );
         return ResponseMessage
                 .builder()
                 .success(true)
-                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), appointment.getDoctor().getId(), appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), invoice.getId()))
+                .data(new ResponseAppointmentDTO(appointment.getId(), appointment.getUser().getId(), responseDoctorDTO, appointment.getDate().toLocalDateTime().toLocalDate().toString(), appointment.getTime(), appointment.getStatus().toString(), invoice.getId()))
                 .build();
     }
 
