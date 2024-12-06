@@ -34,6 +34,7 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
+          ssh-keygen -p -m PEM -f private_key.pem
 
       - name: Deploy Docker container to server
         env:
