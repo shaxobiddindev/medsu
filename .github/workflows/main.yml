@@ -40,6 +40,6 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          scp -i private_key.pem medsu.tar $SSH_USER@$SERVER_IP:/root/
-          ssh -i private_key.pem $SSH_USER@$SERVER_IP 'docker load < /root/medsu.tar'
-          ssh -i private_key.pem $SSH_USER@$SERVER_IP 'docker run -d -p 8080:8080 medsu'
+          scp -o StrictHostKeyChecking=no private_key.pem medsu.tar $SSH_USER@$SERVER_IP:/root/
+          ssh -o StrictHostKeyChecking=no private_key.pem $SSH_USER@$SERVER_IP 'docker load < /root/medsu.tar'
+          ssh -o StrictHostKeyChecking=no private_key.pem $SSH_USER@$SERVER_IP 'docker run -d -p 8080:8080 medsu'
