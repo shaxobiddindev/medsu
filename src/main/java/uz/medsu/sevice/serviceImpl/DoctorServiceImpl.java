@@ -27,7 +27,7 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Override
     public ResponseMessage showAppointments(Integer page, Integer size) {
-        List<ResponseAppointmentDTO> appointmentDTOS = appointmentRepository.findAllByDoctor(doctorRepository.findByUser(Util.getCurrentUser()).orElseThrow(()-> new RuntimeException(I18nUtil.getMessage("doctorNotFound"))),PageRequest.of(page, size)).toList().stream().map(appointment -> {
+            List<ResponseAppointmentDTO> appointmentDTOS = appointmentRepository.findAllByDoctor(doctorRepository.findByUser(Util.getCurrentUser()).orElseThrow(()-> new RuntimeException(I18nUtil.getMessage("doctorNotFound"))),PageRequest.of(page, size)).toList().stream().map(appointment -> {
             ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
                     appointment.getDoctor().getId(),
                     appointment.getDoctor().getAbout(),

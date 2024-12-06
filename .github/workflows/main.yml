@@ -1,0 +1,44 @@
+name: CI/CD Pipeline with Docker
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t medsu .
+
+      - name: Run Docker container locally (optional)
+        run: |
+          docker run -d -p 8080:8080 medsu
+
+      - name: Push Docker image to Docker Hub (optional)
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker tag medsu ${{ secrets.DOCKER_USERNAME }}/medsu:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/medsu:latest
+
+
+      - name: Deploy Docker container to server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem medsu.tar $SSH_USER@$SERVER_IP:/root/
+          ssh -i private_key.pem $SSH_USER@$SERVER_IP 'docker load < /root/medsu.tar'
+          ssh -i private_key.pem $SSH_USER@$SERVER_IP 'docker run -d -p 8080:8080 medsu'

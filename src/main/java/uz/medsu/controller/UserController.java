@@ -137,6 +137,18 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('READ')")
+    @GetMapping("/doctors/category")
+    public ResponseEntity<ResponseMessage> getDoctorsCategory() {
+        return ResponseEntity.ok(userService.showDoctorsCategory());
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
+    @GetMapping("/{id}/doctor")
+    public ResponseEntity<ResponseMessage> getDoctor(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.showTopDoctor(id));
+    }
+
+    @PreAuthorize("hasAuthority('READ')")
     @GetMapping("/doctor/{search}")
     public ResponseEntity<ResponseMessage> getDoctor(@PathVariable String search, Integer page, Integer size) {
         return ResponseEntity.ok(userService.searchDoctors(search, page, size));

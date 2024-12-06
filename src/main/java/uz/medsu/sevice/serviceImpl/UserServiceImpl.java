@@ -361,6 +361,34 @@ public class UserServiceImpl implements UserService {
         return ResponseMessage.builder().success(true).data(freeTimes).build();
     }
 
+    @Override
+    public ResponseMessage showTopDoctor(Long id) {
+        Doctor doctor = doctorRepository.findById(id).orElseThrow(()->new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
+
+        return ResponseMessage.builder()
+                .success(true)
+                .data(
+                        new ResponseDoctorDTO(
+                                doctor.getId(),
+                                doctor.getAbout(),
+                                doctor.getUser().getFirstName(),
+                                doctor.getUser().getLastName(),
+                                doctor.getDoctorSpecialty().toString(),
+                                doctor.getAppointmentPrice(),
+                                doctor.getRating(),
+                                doctor.getUser().getImageUrl()
+                        )
+                )
+                .build();
+    }
+
+    @Override
+    public ResponseMessage showDoctorsCategory() {
+        return ResponseMessage.builder().success(true).data(
+                Arrays.stream(DoctorSpeciality.values()).toList()
+        ).build();
+    }
+
     private Map<DateDTO, List<FreeTimeDTO>> getFreeTimeInDate(Doctor doctor, LocalDate now) {
         Map<DateDTO, List<FreeTimeDTO>> result = new HashMap<>();
         for (int i = 0; i < 30; i++) {

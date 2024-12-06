@@ -38,4 +38,9 @@ public interface UserService {
     ResponseMessage profile();
 
     ResponseMessage getFreeTime(Long id);
+
+    ResponseMessage showTopDoctor(Long id);
+
+    ResponseMessage showDoctorsCategory();
+
 }

@@ -69,6 +69,9 @@ public class BasketServiceImpl implements BasketService {
 
         if (!basketDrug.getBasket().getUser().getId().equals(Util.getCurrentUser().getId())) throw new RuntimeException(I18nUtil.getMessage("drugNotFound"));
 
+        Basket myBasket = getMyBasket();
+        myBasket.setTotalPrice(myBasket.getTotalPrice()-basketDrug.getCount()*basketDrug.getDrug().getPrice());
+        basketRepository.save(myBasket);
         basketDrugRepository.delete(basketDrug);
         return ResponseMessage
                 .builder()

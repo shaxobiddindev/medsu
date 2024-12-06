@@ -76,6 +76,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public ResponseMessage getArticle(Long id) {
         Article article = articleRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("articleNotFound")));
+        article.setViews(article.getViews() + 1);
+        articleRepository.save(article);
         return ResponseMessage.builder().success(true).data(
                 new ResponseArticleDTO(
                         article.getId(),
