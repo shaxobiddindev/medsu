@@ -34,8 +34,8 @@ public class UploadService {
     }
 
     public ResponseMessage uploadUser(MultipartFile file, Long id) {
+        User user = userRepository.findById(id).orElseThrow(()->new RuntimeException(I18nUtil.getMessage("userNotFound")));
         if (!Util.getCurrentUser().getRole().getName().equals(Roles.ADMIN) && !Util.getCurrentUser().getId().equals(id)) throw new RuntimeException("You cannot change it!");
-        User user = Util.getCurrentUser();
         String url = imageUpload.uploadImage(file);
         user.setImageUrl(url);
         userRepository.save(user);
