@@ -275,6 +275,27 @@ public class AdminServiceImpl implements AdminService {
                 .build();
     }
 
+    @Override
+    public ResponseMessage doctorLocation(Long id, LocationDTO locationDTO) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("userNotFound")));
+        Optional<Location> optionalLocation = locationRepository.findByUser(user);
+        Location location = optionalLocation
+                .orElseGet(() ->
+                        Location
+                                .builder()
+                                .user(Util.getCurrentUser())
+                                .build()
+                );
+        location.setLongitude(locationDTO.longitude());
+        location.setLatitude(locationDTO.latitude());
+        locationRepository.save(location);
+        return ResponseMessage
+                .builder()
+                .success(true)
+                .message(I18nUtil.getMessage("locationUpdated"))
+                .build();
+    }
+
     private List<ReturnUserDTO> usersReturn(List<User> users) {
         List<ReturnUserDTO> returnUsers = new ArrayList<>();
         for (User user : users) {

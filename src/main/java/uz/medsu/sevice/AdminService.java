@@ -27,4 +27,6 @@ public interface AdminService {
 
     ResponseMessage setLocation(Long userId, LocationDTO location);
     ResponseMessage getLocation(Long userId);
+
+    ResponseMessage doctorLocation(Long id, LocationDTO location);
 }

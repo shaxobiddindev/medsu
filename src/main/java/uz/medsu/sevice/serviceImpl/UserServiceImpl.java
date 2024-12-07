@@ -92,6 +92,8 @@ public class UserServiceImpl implements UserService {
         if (!appointment.getUser().getId().equals(Util.getCurrentUser().getId()))
             throw new RuntimeException(I18nUtil.getMessage("appointmentNotFound"));
 
+        Optional<Location> byUser = locationRepository.findByUser(appointment.getDoctor().getUser());
+
         ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
                 appointment.getDoctor().getId(),
                 appointment.getDoctor().getAbout(),
@@ -100,6 +102,8 @@ public class UserServiceImpl implements UserService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                byUser.map(Location::getLatitude).orElse(null),
+                byUser.map(Location::getLongitude).orElse(null),
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage
@@ -128,6 +132,8 @@ public class UserServiceImpl implements UserService {
                     appointment.getDoctor().getDoctorSpecialty().toString(),
                     appointment.getDoctor().getAppointmentPrice(),
                     appointment.getDoctor().getRating(),
+                    null,
+                    null,
                     appointment.getDoctor().getUser().getImageUrl()
             );
             return new ResponseAppointmentDTO(
@@ -363,8 +369,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseMessage showTopDoctor(Long id) {
-        Doctor doctor = doctorRepository.findById(id).orElseThrow(()->new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
-
+        Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("doctorNotFound")));
+        Optional<Location> byUser = locationRepository.findByUser(doctor.getUser());
         return ResponseMessage.builder()
                 .success(true)
                 .data(
@@ -376,6 +382,8 @@ public class UserServiceImpl implements UserService {
                                 doctor.getDoctorSpecialty().toString(),
                                 doctor.getAppointmentPrice(),
                                 doctor.getRating(),
+                                byUser.map(Location::getLatitude).orElse(null),
+                                byUser.map(Location::getLongitude).orElse(null),
                                 doctor.getUser().getImageUrl()
                         )
                 )
@@ -461,6 +469,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseMessage showTopDoctors(Integer page, Integer size) {
         List<ResponseDoctorDTO> doctorDTOS = doctorRepository.findAllByOrderByRatingDesc(PageRequest.of(page, size)).toList().stream().map(doctor -> {
+            Optional<Location> byUser = locationRepository.findByUser(doctor.getUser());
             return new ResponseDoctorDTO(
                     doctor.getId(),
                     doctor.getAbout(),
@@ -469,6 +478,8 @@ public class UserServiceImpl implements UserService {
                     doctor.getDoctorSpecialty().toString(),
                     doctor.getAppointmentPrice(),
                     doctor.getRating(),
+                    byUser.map(Location::getLatitude).orElse(null),
+                    byUser.map(Location::getLongitude).orElse(null),
                     doctor.getUser().getImageUrl()
             );
         }).toList();
@@ -482,6 +493,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseMessage searchDoctors(String text, Integer page, Integer size) {
         List<ResponseDoctorDTO> doctorDTOS = doctorRepository.searchDoctorsByUserFirstNameOrLastNameOrSpecialty(text, PageRequest.of(page, size)).toList().stream().map(doctor -> {
+            Optional<Location> byUser = locationRepository.findByUser(doctor.getUser());
             return new ResponseDoctorDTO(
                     doctor.getId(),
                     doctor.getAbout(),
@@ -490,6 +502,8 @@ public class UserServiceImpl implements UserService {
                     doctor.getDoctorSpecialty().toString(),
                     doctor.getAppointmentPrice(),
                     doctor.getRating(),
+                    byUser.map(Location::getLatitude).orElse(null),
+                    byUser.map(Location::getLongitude).orElse(null),
                     doctor.getUser().getImageUrl()
             );
         }).toList();
@@ -528,7 +542,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseMessage addAppointment(AppointmentDTO appointmentDTO) {
         Timestamp date = checkDate(appointmentDTO.date()).orElseThrow(() -> new RuntimeException(I18nUtil.getMessage("dateFormatError")));
-        if (date.toLocalDateTime().isBefore(LocalDateTime.now()))throw new RuntimeException("Only upcoming dates can be booked!");
+        if (date.toLocalDateTime().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("Only upcoming dates can be booked!");
         Appointment appointment = Appointment
                 .builder()
                 .user(Util.getCurrentUser())
@@ -573,6 +588,7 @@ public class UserServiceImpl implements UserService {
                         "Date: " + appointment.getUpdatedAt().toLocalDateTime().toLocalDate().toString() + "\n" +
                         "Time: " + appointment.getUpdatedAt().toLocalDateTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")) + "\n"
         )));
+        Optional<Location> byUser = locationRepository.findByUser(appointment.getDoctor().getUser());
         ResponseDoctorDTO responseDoctorDTO = new ResponseDoctorDTO(
                 appointment.getDoctor().getId(),
                 appointment.getDoctor().getAbout(),
@@ -581,6 +597,8 @@ public class UserServiceImpl implements UserService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                byUser.map(Location::getLatitude).orElse(null),
+                byUser.map(Location::getLongitude).orElse(null),
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage
@@ -667,6 +685,8 @@ public class UserServiceImpl implements UserService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                null,
+                null,
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage

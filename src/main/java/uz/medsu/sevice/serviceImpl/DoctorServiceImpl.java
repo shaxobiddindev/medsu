@@ -36,6 +36,8 @@ public class DoctorServiceImpl implements DoctorService {
                     appointment.getDoctor().getDoctorSpecialty().toString(),
                     appointment.getDoctor().getAppointmentPrice(),
                     appointment.getDoctor().getRating(),
+                    null,
+                    null,
                     appointment.getDoctor().getUser().getImageUrl()
             );
             return new ResponseAppointmentDTO(
@@ -68,6 +70,8 @@ public class DoctorServiceImpl implements DoctorService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                null,
+                null,
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage
@@ -102,6 +106,8 @@ public class DoctorServiceImpl implements DoctorService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                null,
+                null,
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage
@@ -126,6 +132,8 @@ public class DoctorServiceImpl implements DoctorService {
                 appointment.getDoctor().getDoctorSpecialty().toString(),
                 appointment.getDoctor().getAppointmentPrice(),
                 appointment.getDoctor().getRating(),
+                null,
+                null,
                 appointment.getDoctor().getUser().getImageUrl()
         );
         return ResponseMessage

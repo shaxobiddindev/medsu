@@ -8,5 +8,7 @@ public record ResponseDoctorDTO(
         String speciality,
         Double price,
         Double rating,
+        Double latitude,
+        Double longitude,
         String imageUrl
 ) {}

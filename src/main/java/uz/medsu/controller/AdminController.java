@@ -102,4 +102,9 @@ public class AdminController {
     public ResponseEntity<ResponseMessage> setRating(@PathVariable Long id , @RequestParam("mark") Double mark) {
         return ResponseEntity.ok(adminService.setRating(id, mark));
     }
+
+    @PutMapping("/doctor/{id}/set-location")
+    public ResponseEntity<ResponseMessage> doctorLocation(@PathVariable Long id, @RequestBody LocationDTO location) {
+        return ResponseEntity.ok(adminService.doctorLocation(id, location));
+    }
 }
