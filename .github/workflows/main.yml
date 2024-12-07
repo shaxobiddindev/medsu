@@ -37,7 +37,7 @@ jobs:
 
       - name: Deploy Docker container to server
         env:
-          SERVER_IP: ${{ secrets.SERVER_IP }})
+          SERVER_IP: ${{ secrets.SERVER_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           # Tar the Docker image for transfer
