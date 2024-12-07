@@ -5,10 +5,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.medsu.config.JwtProvider;
-import uz.medsu.entity.Code;
-import uz.medsu.entity.PasswordKey;
-import uz.medsu.entity.Role;
-import uz.medsu.entity.User;
+import uz.medsu.entity.*;
 import uz.medsu.enums.Authorities;
 import uz.medsu.enums.CodeType;
 import uz.medsu.enums.Gender;
@@ -42,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final ApplicationEventPublisher eventPublisher;
     private final PasswordKeyRepository passwordKeyRepository;
     private final EmailCheckerService emailCheckerService;
+    private final FakeUserRepository fakeUserRepository;
     private final Random random = new Random();
 
     @Override
@@ -70,6 +68,33 @@ public class AuthServiceImpl implements AuthService {
 
 //        if (!(userDTO.gender().toUpperCase().equals(Gender.MALE.toString()) || userDTO.gender().toUpperCase().equals(Gender.FEMALE.toString())))
 //            throw new RuntimeException("Invalid gender");
+        Optional<FakeUser> optionalFakeUser = fakeUserRepository.findByEmail(userDTO.email());
+        FakeUser user;
+        if (optionalFakeUser.isEmpty()){
+            user = FakeUser
+                    .builder()
+                    .email(userDTO.email())
+                    .username(userDTO.username())
+                    .password(userDTO.password())
+//                .firstName(userDTO.firstName())
+//                .lastName(userDTO.lastName())
+//                .age(userDTO.age())
+                    .build();
+            fakeUserRepository.save(user);
+        }
+        user = optionalFakeUser.get();
+
+        ResponseMessage responseMessage = confirmResendCode(user.getEmail(), CodeType.ACCOUNT);
+        return ResponseMessage.builder().success(true).message("Sign Up successfully, " + responseMessage.getMessage()).build();
+    }
+
+    @Override
+    public ResponseMessage confirmEmail(EmailConfirmDTO emailDTO) {
+        Code code = codeRepository.findByEmailAndType(emailDTO.email(), CodeType.ACCOUNT).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
+        if (code.getExpired().toLocalDateTime().isBefore(LocalDateTime.now()) ||
+                !code.getCode().equals(emailDTO.code())
+        ) throw new RuntimeException("Verification code is invalid or expired!");
+        FakeUser fakeUser = fakeUserRepository.findByEmail(emailDTO.email()).orElseThrow(() -> new RuntimeException("User not found!"));
         Role role = Role.builder()
                 .name(Roles.USER)
                 .authorities(authorityRepository
@@ -85,9 +110,9 @@ public class AuthServiceImpl implements AuthService {
         roleRepository.save(role);
         User user = User
                 .builder()
-                .email(userDTO.email())
-                .username(userDTO.username())
-                .password(passwordEncoder.encode(userDTO.password()))
+                .email(fakeUser.getEmail())
+                .username(fakeUser.getUsername())
+                .password(passwordEncoder.encode(fakeUser.getPassword()))
 //                .firstName(userDTO.firstName())
 //                .lastName(userDTO.lastName())
 //                .age(userDTO.age())
@@ -95,22 +120,9 @@ public class AuthServiceImpl implements AuthService {
                 .role(role)
                 .profession(Roles.USER)
                 .isNonLocked(true)
-                .enabled(false)
+                .enabled(true)
                 .locale("en")
                 .build();
-        userRepository.save(user);
-        ResponseMessage responseMessage = confirmResendCode(user.getEmail(), CodeType.ACCOUNT);
-        return ResponseMessage.builder().success(true).message("Sign Up successfully, " + responseMessage.getMessage()).data(new ReturnUserDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getAge(), user.getGender().toString(), user.getRole(), user.getEnabled(), user.getIsNonLocked(), user.getImageUrl())).build();
-    }
-
-    @Override
-    public ResponseMessage confirmEmail(EmailConfirmDTO emailDTO) {
-        Code code = codeRepository.findByEmailAndType(emailDTO.email(), CodeType.ACCOUNT).orElseThrow(() -> new RuntimeException("Verification code is invalid or expired!"));
-        if (code.getExpired().toLocalDateTime().isBefore(LocalDateTime.now()) ||
-                !code.getCode().equals(emailDTO.code())
-        ) throw new RuntimeException("Verification code is invalid or expired!");
-        User user = userRepository.findByEmail(emailDTO.email()).orElseThrow(() -> new RuntimeException("User not found!"));
-        user.setEnabled(true);
         userRepository.save(user);
         return ResponseMessage.builder().success(true).message(I18nUtil.getMessage("accountConfirmed", user)).build();
     }
